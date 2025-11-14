@@ -127,13 +127,13 @@ git tag
 
 
 <H1>🏗 Структура проекта text</H1>
-skypro-music-next/<br>
-├── src/<br>
-│ ├── app/              # Next.js 13+ app directory<br>
-│ ├── components/       # React компоненты<br>
-│ ├── lib/              # Утилиты и конфигурации<br>
-│ ├── types/            # TypeScript типы<br>
-│ └── utils/            # Вспомогательные функции<br>
-├── public/             # Статические файлы<br>
-├── prisma/             # Схема базы данных<br>
-└── docs/               # Документация
+<pre>skypro-music-next/</pre><br>
+<pre>├── src/</pre><br>
+<pre>│ ├── app/              # Next.js 13+ app directory</pre><br>
+<pre>│ ├── components/       # React компоненты</pre><br>
+<pre>│ ├── lib/              # Утилиты и конфигурации</pre><br>
+<pre>│ ├── types/            # TypeScript типы</pre><br>
+<pre>│ └── utils/            # Вспомогательные функции</pre><br>
+<pre>├── public/             # Статические файлы</pre><br>
+<pre>├── prisma/             # Схема базы данных</pre><br>
+<pre>└── docs/               # Документация</pre>
