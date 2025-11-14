@@ -5,7 +5,7 @@ SkyPro Music Next
 Frontend: Next.js, TypeScript, CSS
 
 <H1>📦 Установка и запуск bash</H1>
-<H4> Клонирование репозитория </H4>
+# Клонирование репозитория
 git clone https://github.com/your-username/skypro-music-next.git
 cd skypro-music-next
 
