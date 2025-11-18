@@ -2,7 +2,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import classnames from 'classnames';
 
-import './page.css';
 import styles from './page.module.css';
 import Bar from './components/Bar/Bar';
 import MainNav from './components/MainNav/MainNav';

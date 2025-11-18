@@ -29,7 +29,7 @@ export default function MainNav() {
             </Link>
           </li>
           <li className={styles.menu__item}>
-            <Link href="/favorites" className={styles.menu__link}>
+            <Link href="/ffff" className={styles.menu__link}>
               Мой плейлист
             </Link>
           </li>
