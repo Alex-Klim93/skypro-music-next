@@ -40,7 +40,6 @@
 }
 
 .filter__button {
-  /*composes: btn-text from '/src/UI/Button/button.module.css';*/
   font-style: normal;
   font-weight: 400;
   font-size: 16px;
@@ -49,6 +48,14 @@
   border-radius: 60px;
   padding: 6px 20px;
   color: white;
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter__button:hover {
+  border-color: #b672ff;
+  color: #b672ff;
 }
 
 .filter__button:not(:last-child) {
@@ -114,4 +121,10 @@
   height: 12px;
   fill: transparent;
   stroke: #696969;
+}
+
+/* Активное состояние кнопки фильтра */
+.filter__button.active {
+  border-color: #b672ff;
+  color: #b672ff;
 }
