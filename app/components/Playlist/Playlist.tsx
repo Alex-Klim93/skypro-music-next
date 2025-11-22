@@ -1,13 +1,14 @@
 import styles from './Playlist.module.css';
 import Link from 'next/link';
 import { data } from '@/app/data';
+import { formatTime, getUniqueValuesByKey } from '@/app/utils/helper';
 
 export default function Playlist() {
+  console.log(getUniqueValuesByKey(data, 'author'));
   return (
     <div className={styles.content__playlist}>
       {data.map((track) => (
-        // eslint-disable-next-line react/jsx-key
-        <div className={styles.playlist__item}>
+        <div key={track._id} className={styles.playlist__item}>
           <div className={styles.playlist__track}>
             <div className={styles.track__title}>
               <div className={styles.track__titleImage}>
@@ -37,7 +38,7 @@ export default function Playlist() {
                 <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
               </svg>
               <span className={styles.track__timeText}>
-                {track.duration_in_seconds}
+                {formatTime(track.duration_in_seconds)}
               </span>
             </div>
           </div>

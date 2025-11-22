@@ -4,7 +4,6 @@ import classnames from 'classnames';
 import Search from '../Search/Search';
 import Playlist from '../Playlist/Playlist';
 
-
 export default function Centerblock() {
   return (
     <div className={styles.centerblock}>
@@ -35,7 +34,6 @@ export default function Centerblock() {
         </div>
 
         <Playlist />
-
       </div>
     </div>
   );
