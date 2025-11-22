@@ -1,0 +1,243 @@
+body {
+  background-color: rgba(24, 24, 24, 1); /* Черный цвет */
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.wrapper {
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  background-color: #383838;
+}
+
+.container {
+  max-width: 1920px;
+  height: 100vh;
+  margin: 0 auto;
+  position: relative;
+  background-color: #181818;
+}
+
+.main {
+  -webkit-box-flex: 1;
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+.centerblock {
+  width: auto;
+  -webkit-box-flex: 3;
+  -ms-flex-positive: 3;
+  flex-grow: 3;
+  padding: 20px 40px 20px 111px;
+}
+
+.main__nav {
+  height: 180px;
+  background-color: #181818;
+  padding: 36px 92px 36px 36px;
+}
+
+.header_box {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 150px;
+}
+
+.nav__Boxlogo {
+  margin-bottom: 46px;
+}
+
+.nav__logo {
+  width: 113.33px;
+  height: 17px;
+}
+
+.logo__image {
+  width: 113.33px;
+  height: 17px;
+  color: #181818;
+}
+
+.nav__burger {
+  width: 20px;
+  height: 36px;
+  padding: 13px 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+.burger__line {
+  display: inline-block;
+  width: 100%;
+  height: 1px;
+  background-color: #d3d3d3;
+}
+
+.header_sherch {
+  width: 100%;
+  height: 52px;
+  background: rgba(24, 24, 24, 1);
+  border: none;
+  border-bottom: 1px solid rgba(78, 78, 78, 1);
+}
+
+.header__boxSvg {
+}
+
+.header__btnlogoutSvg {
+  width: 40px;
+  height: 40px;
+}
+
+.nav__menu {
+  display: block;
+  visibility: visible;
+}
+
+.menu__list {
+  padding: 18px 0 10px 0;
+}
+
+.menu__item {
+  padding: 5px 0;
+  margin-bottom: 16px;
+}
+
+.box__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 85vh;
+  width: 100%;
+}
+
+.box__errorMin {
+  flex-direction: column;
+  width: 341px;
+  display: flex;
+  align-items: center;
+}
+
+.title__error {
+  color: rgba(255, 255, 255, 1);
+  font-family: StratosSkyeng;
+  font-size: 160px;
+  font-weight: 400;
+  line-height: 168px;
+  letter-spacing: 0px;
+  text-align: left;
+  margin-bottom: 3px;
+}
+
+.subtitle__box {
+  display: flex;
+  flex-direction: row;
+}
+
+.subtitle__error {
+  color: rgba(255, 255, 255, 1);
+  font-family: StratosSkyeng;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 40px;
+  letter-spacing: 0%;
+  text-align: left;
+  margin-bottom: 19px;
+}
+
+.subtitle__errorSvg {
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+}
+
+.text__error {
+  color: rgba(78, 78, 78, 1);
+  font-family: StratosSkyeng;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: -0.3%;
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.errorBox__link {
+  width: 278px;
+  height: 52px;
+  border-radius: 6px;
+  background: /*var(--Palette/Purple/90,*/ rgba(88, 14, 162, 1) /*)*/;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.error__link {
+  color: rgba(255, 255, 255, 1);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: -0.3%;
+  text-align: center;
+}
+
+.main__sidebar {
+  max-width: 418px;
+  padding: 20px 90px 20px 78px;
+}
+
+.sidebar__personal {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: end;
+  -ms-flex-pack: end;
+  justify-content: flex-end;
+  padding: 12px 0 15px 0;
+}
+
+.sidebar__personalName {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #ffffff;
+  margin-right: 16px;
+}
+
+.sidebar__icon {
+  width: 43px;
+  height: 43px;
+  background-color: #313131;
+  border-radius: 50%;
+  cursor: pointer;
+}
