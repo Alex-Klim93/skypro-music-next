@@ -1,0 +1,59 @@
+.filterPopup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 1000;
+}
+
+.filterContent {
+  position: absolute;
+  top: auto; /* Позиционирование под кнопками фильтров */
+  left: auto; /* Отступ от левого края */
+  background: #313131;
+  border-radius: 12px;
+  padding: 34px;
+  max-height: 305px;
+  overflow: hidden;
+}
+
+.filterList {
+  color: white;
+  display: flex;
+  gap: 28px;
+  height: max-content;
+  max-height: 237px;
+  overflow-y: auto;
+  flex-direction: column;
+  width: max-content;
+  max-width: 248px;
+}
+
+.filterList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.filterList::-webkit-scrollbar-track {
+  background-color: rgba(75, 73, 73, 1);
+}
+
+.filterList::-webkit-scrollbar-thumb {
+  background-color: white;
+  border-radius: 2px;
+}
+
+.filterItem {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 24px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.filterItem:hover {
+  color: #b672ff;
+  text-decoration: underline;
+}
