@@ -37,6 +37,7 @@ export default function Playlist() {
               <svg className={styles.track__timeSvg}>
                 <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
               </svg>
+
               <span className={styles.track__timeText}>
                 {formatTime(track.duration_in_seconds)}
               </span>
