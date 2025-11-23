@@ -1,17 +1,13 @@
 .filterPopup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: absolute;
   background: transparent;
   z-index: 1000;
 }
 
 .filterContent {
   position: absolute;
-  top: auto; /* Позиционирование под кнопками фильтров */
-  left: auto; /* Отступ от левого края */
+  top: 40px; /* Позиционирование под кнопками фильтров */
+  left: 95px; /* Отступ от левого края */
   background: #313131;
   border-radius: 12px;
   padding: 34px;
