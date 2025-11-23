@@ -11,6 +11,8 @@ type initialStateType = {
   isShuffle: boolean;
   currentPlaylist: TrackType[];
   currentTrackIndex: number;
+  shuffledPlaylist: TrackType[]; // Для запоминания порядка при перемешивании
+  originalPlaylist: TrackType[]; // Оригинальный порядок
 };
 
 const initialState: initialStateType = {
@@ -23,6 +25,8 @@ const initialState: initialStateType = {
   isShuffle: false,
   currentPlaylist: [],
   currentTrackIndex: -1,
+  shuffledPlaylist: [],
+  originalPlaylist: [],
 };
 
 const trackSlice = createSlice({
@@ -40,76 +44,115 @@ const trackSlice = createSlice({
       state.currentTrack = action.payload.track;
       if (action.payload.playlist) {
         state.currentPlaylist = action.payload.playlist;
-      }
-      if (action.payload.index !== undefined) {
+        state.originalPlaylist = action.payload.playlist;
+
+        // Инициализируем shuffledPlaylist если shuffle активен
+        if (state.isShuffle) {
+          state.shuffledPlaylist = shuffleArray([...action.payload.playlist]);
+          // Находим индекс в shuffled плейлисте
+          const shuffledIndex = state.shuffledPlaylist.findIndex(
+            (track) => track._id === action.payload.track._id,
+          );
+          state.currentTrackIndex = shuffledIndex;
+        } else {
+          state.currentTrackIndex = action.payload.index ?? 0;
+        }
+      } else if (action.payload.index !== undefined) {
         state.currentTrackIndex = action.payload.index;
       }
       state.currentTime = 0;
     },
+
     setIsPlay: (state, action: PayloadAction<boolean>) => {
       state.isPlay = action.payload;
     },
+
     setCurrentTime: (state, action: PayloadAction<number>) => {
       state.currentTime = action.payload;
     },
+
     setDuration: (state, action: PayloadAction<number>) => {
       state.duration = action.payload;
     },
+
     setVolume: (state, action: PayloadAction<number>) => {
       state.volume = action.payload;
     },
+
     setIsLoop: (state, action: PayloadAction<boolean>) => {
       state.isLoop = action.payload;
     },
+
     setIsShuffle: (state, action: PayloadAction<boolean>) => {
-      state.isShuffle = action.payload;
+      const newShuffleState = action.payload;
+
+      if (newShuffleState && !state.isShuffle) {
+        // Включаем shuffle - создаем перемешанный плейлист
+        if (state.originalPlaylist.length > 0) {
+          state.shuffledPlaylist = shuffleArray([...state.originalPlaylist]);
+
+          // Находим текущий трек в перемешанном плейлисте
+          const currentTrackId = state.currentTrack?._id;
+          if (currentTrackId) {
+            const newIndex = state.shuffledPlaylist.findIndex(
+              (track) => track._id === currentTrackId,
+            );
+            if (newIndex !== -1) {
+              state.currentTrackIndex = newIndex;
+              state.currentPlaylist = state.shuffledPlaylist;
+            }
+          }
+        }
+      } else if (!newShuffleState && state.isShuffle) {
+        // Выключаем shuffle - возвращаем оригинальный порядок
+        const currentTrackId = state.currentTrack?._id;
+        if (currentTrackId && state.originalPlaylist.length > 0) {
+          const originalIndex = state.originalPlaylist.findIndex(
+            (track) => track._id === currentTrackId,
+          );
+          if (originalIndex !== -1) {
+            state.currentTrackIndex = originalIndex;
+            state.currentPlaylist = state.originalPlaylist;
+          }
+        }
+      }
+
+      state.isShuffle = newShuffleState;
     },
+
     nextTrack: (state) => {
       if (state.currentPlaylist.length > 0 && state.currentTrackIndex !== -1) {
-        let nextIndex;
-        if (state.isShuffle) {
-          do {
-            nextIndex = Math.floor(
-              Math.random() * state.currentPlaylist.length,
-            );
-          } while (
-            nextIndex === state.currentTrackIndex &&
-            state.currentPlaylist.length > 1
-          );
-        } else {
-          nextIndex =
-            (state.currentTrackIndex + 1) % state.currentPlaylist.length;
-        }
+        const nextIndex =
+          (state.currentTrackIndex + 1) % state.currentPlaylist.length;
         state.currentTrackIndex = nextIndex;
         state.currentTrack = state.currentPlaylist[nextIndex];
         state.currentTime = 0;
         state.isPlay = true;
       }
     },
+
     prevTrack: (state) => {
       if (state.currentPlaylist.length > 0 && state.currentTrackIndex !== -1) {
-        let prevIndex;
-        if (state.isShuffle) {
-          do {
-            prevIndex = Math.floor(
-              Math.random() * state.currentPlaylist.length,
-            );
-          } while (
-            prevIndex === state.currentTrackIndex &&
-            state.currentPlaylist.length > 1
-          );
-        } else {
-          prevIndex = state.currentTrackIndex - 1;
-          if (prevIndex < 0) prevIndex = state.currentPlaylist.length - 1;
-        }
-        state.currentTrackIndex = prevIndex;
-        state.currentTrack = state.currentPlaylist[prevIndex];
+        const prevIndex = state.currentTrackIndex - 1;
+        state.currentTrackIndex =
+          prevIndex < 0 ? state.currentPlaylist.length - 1 : prevIndex;
+        state.currentTrack = state.currentPlaylist[state.currentTrackIndex];
         state.currentTime = 0;
         state.isPlay = true;
       }
     },
   },
 });
+
+// Вспомогательная функция для перемешивания массива
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 export const {
   setCurrentTrack,

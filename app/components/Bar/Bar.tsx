@@ -29,101 +29,94 @@ export default function Bar() {
   } = useAppSelector((state) => state.tracks);
   const dispatch = useAppDispatch();
 
+  // Управление audio элементом через useRef
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
-  const [isTrackLoading, setIsTrackLoading] = useState(false);
-  const [isPlayingRequested, setIsPlayingRequested] = useState(false);
 
-  // Функция для безопасного воспроизведения
-  const safePlay = async (audio: HTMLAudioElement): Promise<boolean> => {
-    try {
-      await audio.play();
-      setIsPlayingRequested(false);
-      return true;
-    } catch (error) {
-      console.error('Error playing audio:', error);
-      setIsPlayingRequested(false);
-      return false;
-    }
-  };
-
-  // Функция для переключения воспроизведения и паузы
-  const togglePlay = async () => {
+  // Обработка событий audio элемента через useEffect
+  useEffect(() => {
     const audio = audioRef.current;
-    if (audio) {
-      try {
-        if (isPlay) {
-          audio.pause();
-          dispatch(setIsPlay(false));
-        } else {
-          setIsPlayingRequested(true);
-          const success = await safePlay(audio);
-          if (success) {
-            dispatch(setIsPlay(true));
-          }
-        }
-      } catch (error) {
-        console.error('Error toggling play:', error);
-        setIsPlayingRequested(false);
-      }
-    }
-  };
+    if (!audio) return;
 
-  // Обработчик изменения времени
-  const handleTimeUpdate = () => {
-    const audio = audioRef.current;
-    if (audio) {
+    // Обработчики событий audio элемента
+    const handleTimeUpdate = () => {
       dispatch(setCurrentTime(audio.currentTime));
-    }
-  };
+    };
 
-  // Обработчик загрузки метаданных
-  const handleLoadedMetadata = () => {
-    const audio = audioRef.current;
-    if (audio) {
+    const handleLoadedMetadata = () => {
       dispatch(setDuration(audio.duration));
-      setIsTrackLoading(false);
+    };
 
-      // Воспроизводим только если трек был запущен и нет активных запросов на паузу
-      if (isPlay && !isPlayingRequested) {
-        safePlay(audio).then((success) => {
-          if (success) {
-            dispatch(setIsPlay(true));
-          }
+    const handleEnded = () => {
+      if (isLoop) {
+        audio.currentTime = 0;
+        audio.play();
+      } else {
+        dispatch(nextTrack());
+      }
+    };
+
+    const handleCanPlay = () => {
+      if (isPlay) {
+        audio.play().catch((error) => {
+          console.error('Error playing audio:', error);
+          dispatch(setIsPlay(false));
         });
       }
-    }
-  };
+    };
 
-  // Обработчик начала загрузки
-  const handleLoadStart = () => {
-    setIsTrackLoading(true);
-  };
+    // Подписываемся на события
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('canplay', handleCanPlay);
 
-  // Обработчик возможности воспроизведения
-  const handleCanPlay = () => {
+    // Отписываемся при размонтировании
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('canplay', handleCanPlay);
+    };
+  }, [dispatch, isPlay, isLoop]);
+
+  // Управление воспроизведением/паузой через useEffect
+  useEffect(() => {
     const audio = audioRef.current;
-    if (audio && isPlay && !isPlayingRequested) {
-      safePlay(audio).then((success) => {
-        if (success) {
-          dispatch(setIsPlay(true));
-        }
-      });
-    }
-  };
+    if (!audio || !currentTrack) return;
 
-  // Обработчик окончания трека
-  const handleEnded = () => {
-    if (isLoop) {
-      const audio = audioRef.current;
-      if (audio) {
-        audio.currentTime = 0;
-        safePlay(audio);
+    const playAudio = async () => {
+      try {
+        await audio.play();
+        dispatch(setIsPlay(true));
+      } catch (error) {
+        console.error('Error playing audio:', error);
+        dispatch(setIsPlay(false));
       }
+    };
+
+    if (isPlay) {
+      playAudio();
     } else {
-      dispatch(nextTrack());
+      audio.pause();
     }
-  };
+  }, [isPlay, currentTrack, dispatch]);
+
+  // Управление громкостью через useEffect
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = volume;
+    }
+  }, [volume]);
+
+  // Управление зацикливанием через useEffect
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.loop = isLoop;
+    }
+  }, [isLoop]);
 
   // Обработчик клика по прогресс-бару
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -143,11 +136,11 @@ export default function Bar() {
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     dispatch(setVolume(newVolume));
+  };
 
-    const audio = audioRef.current;
-    if (audio) {
-      audio.volume = newVolume;
-    }
+  // Переключение воспроизведения
+  const togglePlay = () => {
+    dispatch(setIsPlay(!isPlay));
   };
 
   // Переключение повтора
@@ -160,86 +153,6 @@ export default function Bar() {
     dispatch(setIsShuffle(!isShuffle));
   };
 
-  // Синхронизация аудио элемента с состоянием
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.volume = volume;
-      audio.loop = isLoop;
-    }
-  }, [volume, isLoop]);
-
-  // Обработка смены трека
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio && currentTrack) {
-      // Сохраняем текущее состояние воспроизведения
-      const wasPlaying = isPlay;
-
-      // Останавливаем текущее воспроизведение без вызова pause() чтобы избежать конфликта
-      audio.currentTime = 0;
-      dispatch(setCurrentTime(0));
-
-      // Сбрасываем флаг запроса воспроизведения
-      setIsPlayingRequested(false);
-
-      // Загружаем новый трек
-      audio.load();
-
-      // После загрузки восстанавливаем состояние воспроизведения
-      const onCanPlayThrough = () => {
-        if (wasPlaying) {
-          setIsPlayingRequested(true);
-          safePlay(audio).then((success) => {
-            if (success) {
-              dispatch(setIsPlay(true));
-            }
-          });
-        }
-        audio.removeEventListener('canplaythrough', onCanPlayThrough);
-      };
-
-      audio.addEventListener('canplaythrough', onCanPlayThrough);
-
-      // Очистка при размонтировании
-      return () => {
-        audio.removeEventListener('canplaythrough', onCanPlayThrough);
-      };
-    }
-  }, [currentTrack, dispatch]);
-
-  // Управление воспроизведением/паузой
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio && currentTrack && !isTrackLoading) {
-      if (isPlay && !isPlayingRequested) {
-        setIsPlayingRequested(true);
-        safePlay(audio).then((success) => {
-          if (success) {
-            dispatch(setIsPlay(true));
-          } else {
-            // Если воспроизведение не удалось, сбрасываем состояние
-            dispatch(setIsPlay(false));
-          }
-        });
-      } else if (!isPlay) {
-        // Пауза без ошибок - просто ставим на паузу
-        audio.pause();
-        setIsPlayingRequested(false);
-      }
-    }
-  }, [isPlay, currentTrack, isTrackLoading, isPlayingRequested, dispatch]);
-
-  // Обработчик ошибок аудио
-  const handleAudioError = (
-    e: React.SyntheticEvent<HTMLAudioElement, Event>,
-  ) => {
-    console.error('Audio error:', e);
-    setIsTrackLoading(false);
-    setIsPlayingRequested(false);
-    dispatch(setIsPlay(false));
-  };
-
   // Рассчет прогресса в процентах
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -247,17 +160,9 @@ export default function Bar() {
 
   return (
     <div className={styles.bar}>
-      <audio
-        ref={audioRef}
-        src={currentTrack.track_file}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onLoadStart={handleLoadStart}
-        onCanPlay={handleCanPlay}
-        onEnded={handleEnded}
-        onError={handleAudioError}
-        preload="metadata"
-      />
+      {/* Управление audio элементом через ref */}
+      <audio ref={audioRef} src={currentTrack.track_file} preload="metadata" />
+
       <div className={styles.bar__content}>
         <div
           ref={progressBarRef}
@@ -269,6 +174,7 @@ export default function Bar() {
             style={{ width: `${progressPercentage}%` }}
           ></div>
         </div>
+
         <div className={styles.bar__playerBlock}>
           <div className={styles.bar__player}>
             <div className={styles.player__controls}>
@@ -280,6 +186,7 @@ export default function Bar() {
                   <use xlinkHref="/img/icon/sprite.svg#icon-prev"></use>
                 </svg>
               </div>
+
               <div
                 className={classnames(styles.player__btnPlay, styles.btn)}
                 onClick={togglePlay}
@@ -294,6 +201,7 @@ export default function Bar() {
                   ></use>
                 </svg>
               </div>
+
               <div
                 className={classnames(styles.player__btnNext, styles.btn)}
                 onClick={() => dispatch(nextTrack())}
@@ -302,6 +210,7 @@ export default function Bar() {
                   <use xlinkHref="/img/icon/sprite.svg#icon-next"></use>
                 </svg>
               </div>
+
               <div
                 className={classnames(
                   styles.player__btnRepeat,
@@ -314,6 +223,7 @@ export default function Bar() {
                   <use xlinkHref="/img/icon/sprite.svg#icon-repeat"></use>
                 </svg>
               </div>
+
               <div
                 className={classnames(
                   styles.player__btnShuffle,
@@ -378,6 +288,7 @@ export default function Bar() {
               </div>
             </div>
           </div>
+
           <div className={styles.bar__volumeBlock}>
             <div className={styles.volume__content}>
               <div className={styles.volume__image}>
