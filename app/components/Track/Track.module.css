@@ -1,19 +1,9 @@
-.content__playlist {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -ms-flex-direction: column;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
 .playlist__item {
   width: 100%;
   display: block;
   margin-bottom: 12px;
 }
+
 
 .playlist__track {
   display: -webkit-box;
@@ -67,6 +57,26 @@
   height: 17px;
   fill: transparent;
   stroke: #4e4e4e;
+}
+
+.active.active {
+  fill: #b672ff !important;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .track__titleLink {
