@@ -4,7 +4,6 @@
   margin-bottom: 12px;
 }
 
-
 .playlist__track {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -70,12 +69,31 @@
     opacity: 1;
   }
   50% {
-    transform: scale(1.1);
+    transform: scale(1.2);
     opacity: 0.7;
   }
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+.track__titleImageActive {
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0% {
+    background: #313131;
+    box-shadow: 0 0 0px rgba(74, 58, 92, 0.5);
+  }
+  50% {
+    background: #4a3a5c;
+    box-shadow: 0 0 20px rgba(74, 58, 92, 0.8);
+  }
+  100% {
+    background: #313131;
+    box-shadow: 0 0 0px rgba(74, 58, 92, 0.5);
   }
 }
 

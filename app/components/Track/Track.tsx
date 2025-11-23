@@ -30,7 +30,11 @@ export default function Track({ track, playlist, index }: trackTypeProp) {
     <div className={styles.playlist__item} onClick={onClickTrack}>
       <div className={styles.playlist__track}>
         <div className={styles.track__title}>
-          <div className={styles.track__titleImage}>
+          <div
+            className={classNames(styles.track__titleImage, {
+              [styles.track__titleImageActive]: isCurrentTrack && isPlay,
+            })}
+          >
             <svg
               className={classNames(styles.track__titleSvg, {
                 [styles.active]: isCurrentTrack && isPlay,

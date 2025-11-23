@@ -4,7 +4,7 @@ import styles from './bar.module.css';
 import Link from 'next/link';
 import classnames from 'classnames';
 import { useAppDispatch, useAppSelector } from '@/app/store/store';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import {
   setIsPlay,
   setCurrentTime,
@@ -31,6 +31,21 @@ export default function Bar() {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const [isTrackLoading, setIsTrackLoading] = useState(false);
+  const [isPlayingRequested, setIsPlayingRequested] = useState(false);
+
+  // Функция для безопасного воспроизведения
+  const safePlay = async (audio: HTMLAudioElement): Promise<boolean> => {
+    try {
+      await audio.play();
+      setIsPlayingRequested(false);
+      return true;
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      setIsPlayingRequested(false);
+      return false;
+    }
+  };
 
   // Функция для переключения воспроизведения и паузы
   const togglePlay = async () => {
@@ -39,12 +54,17 @@ export default function Bar() {
       try {
         if (isPlay) {
           audio.pause();
+          dispatch(setIsPlay(false));
         } else {
-          await audio.play();
+          setIsPlayingRequested(true);
+          const success = await safePlay(audio);
+          if (success) {
+            dispatch(setIsPlay(true));
+          }
         }
-        dispatch(setIsPlay(!isPlay));
       } catch (error) {
-        console.error('Error playing audio:', error);
+        console.error('Error toggling play:', error);
+        setIsPlayingRequested(false);
       }
     }
   };
@@ -62,9 +82,33 @@ export default function Bar() {
     const audio = audioRef.current;
     if (audio) {
       dispatch(setDuration(audio.duration));
-      if (isPlay) {
-        audio.play().catch(console.error);
+      setIsTrackLoading(false);
+
+      // Воспроизводим только если трек был запущен и нет активных запросов на паузу
+      if (isPlay && !isPlayingRequested) {
+        safePlay(audio).then((success) => {
+          if (success) {
+            dispatch(setIsPlay(true));
+          }
+        });
       }
+    }
+  };
+
+  // Обработчик начала загрузки
+  const handleLoadStart = () => {
+    setIsTrackLoading(true);
+  };
+
+  // Обработчик возможности воспроизведения
+  const handleCanPlay = () => {
+    const audio = audioRef.current;
+    if (audio && isPlay && !isPlayingRequested) {
+      safePlay(audio).then((success) => {
+        if (success) {
+          dispatch(setIsPlay(true));
+        }
+      });
     }
   };
 
@@ -74,7 +118,7 @@ export default function Bar() {
       const audio = audioRef.current;
       if (audio) {
         audio.currentTime = 0;
-        audio.play();
+        safePlay(audio);
       }
     } else {
       dispatch(nextTrack());
@@ -125,20 +169,76 @@ export default function Bar() {
     }
   }, [volume, isLoop]);
 
-  // Автоматическое воспроизведение при смене трека
+  // Обработка смены трека
   useEffect(() => {
     const audio = audioRef.current;
     if (audio && currentTrack) {
+      // Сохраняем текущее состояние воспроизведения
+      const wasPlaying = isPlay;
+
+      // Останавливаем текущее воспроизведение без вызова pause() чтобы избежать конфликта
       audio.currentTime = 0;
       dispatch(setCurrentTime(0));
 
-      if (isPlay) {
-        setTimeout(() => {
-          audio.play().catch(console.error);
-        }, 100);
+      // Сбрасываем флаг запроса воспроизведения
+      setIsPlayingRequested(false);
+
+      // Загружаем новый трек
+      audio.load();
+
+      // После загрузки восстанавливаем состояние воспроизведения
+      const onCanPlayThrough = () => {
+        if (wasPlaying) {
+          setIsPlayingRequested(true);
+          safePlay(audio).then((success) => {
+            if (success) {
+              dispatch(setIsPlay(true));
+            }
+          });
+        }
+        audio.removeEventListener('canplaythrough', onCanPlayThrough);
+      };
+
+      audio.addEventListener('canplaythrough', onCanPlayThrough);
+
+      // Очистка при размонтировании
+      return () => {
+        audio.removeEventListener('canplaythrough', onCanPlayThrough);
+      };
+    }
+  }, [currentTrack, dispatch]);
+
+  // Управление воспроизведением/паузой
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && currentTrack && !isTrackLoading) {
+      if (isPlay && !isPlayingRequested) {
+        setIsPlayingRequested(true);
+        safePlay(audio).then((success) => {
+          if (success) {
+            dispatch(setIsPlay(true));
+          } else {
+            // Если воспроизведение не удалось, сбрасываем состояние
+            dispatch(setIsPlay(false));
+          }
+        });
+      } else if (!isPlay) {
+        // Пауза без ошибок - просто ставим на паузу
+        audio.pause();
+        setIsPlayingRequested(false);
       }
     }
-  }, [currentTrack, dispatch, isPlay]);
+  }, [isPlay, currentTrack, isTrackLoading, isPlayingRequested, dispatch]);
+
+  // Обработчик ошибок аудио
+  const handleAudioError = (
+    e: React.SyntheticEvent<HTMLAudioElement, Event>,
+  ) => {
+    console.error('Audio error:', e);
+    setIsTrackLoading(false);
+    setIsPlayingRequested(false);
+    dispatch(setIsPlay(false));
+  };
 
   // Рассчет прогресса в процентах
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -152,8 +252,11 @@ export default function Bar() {
         src={currentTrack.track_file}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
+        onLoadStart={handleLoadStart}
+        onCanPlay={handleCanPlay}
         onEnded={handleEnded}
-        onError={(e) => console.error('Audio error:', e)}
+        onError={handleAudioError}
+        preload="metadata"
       />
       <div className={styles.bar__content}>
         <div
