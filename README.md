@@ -129,3 +129,4 @@ skypro-music-next/<br>
 ├── public/             # Статические файлы<br>
 ├── prisma/             # Схема базы данных<br>
 └── docs/               # Документация
+.
