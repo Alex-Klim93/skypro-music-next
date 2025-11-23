@@ -132,7 +132,6 @@
   stroke: #696969;
 }
 
-
 .player__trackPlay {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -188,7 +187,6 @@
   grid-area: author;
   min-width: 49px;
 }
-
 
 .trackPlay__authorLink {
   font-style: normal;
@@ -311,4 +309,70 @@
   border-radius: 50%;
   position: relative;
   margin-top: -7px;
+}
+
+/* Стили для прогресс-бара */
+.bar__playerProgress {
+  width: 100%;
+  height: 5px;
+  background: #2e2e2e;
+  cursor: pointer;
+  position: relative;
+}
+
+.progress__filled {
+  height: 100%;
+  background: #b672ff;
+  transition: width 0.1s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Стили для активных кнопок */
+.player__btnRepeat.active svg,
+.player__btnShuffle.active svg {
+  stroke: #b672ff !important;
+  fill: #b672ff !important;
+}
+
+/* Стили для времени трека */
+.trackPlay__time {
+  display: flex;
+  align-items: center;
+  margin: 0 20px;
+  color: #696969;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.trackPlay__currentTime {
+  color: #ffffff;
+}
+
+.trackPlay__separator {
+  margin: 0 5px;
+  color: #696969;
+}
+
+.trackPlay__duration {
+  color: #696969;
+}
+
+/* Обновленные стили для кнопок управления */
+.player__btnPrevSvg,
+.player__btnNextSvg {
+  fill: #d9d9d9;
+}
+
+.player__btnRepeatSvg,
+.player__btnShuffleSvg {
+  fill: transparent;
+  stroke: #696969;
+}
+
+.player__btnRepeat.active .player__btnRepeatSvg,
+.player__btnShuffle.active .player__btnShuffleSvg {
+  stroke: #b672ff;
+  fill: #b672ff;
 }

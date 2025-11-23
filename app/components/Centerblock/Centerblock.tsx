@@ -4,10 +4,10 @@ import styles from './Centerblock.module.css';
 import { data } from '@/app/data';
 import classNames from 'classnames';
 import Search from '../Search/Search';
-import Playlist from '../Playlist/Playlist';
 import { getUniqueValuesByKey } from '@/app/utils/helper';
 import { useState } from 'react';
 import Filter from '../Filter/Filter';
+import Track from '../Track/Track';
 
 export default function Centerblock() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -99,8 +99,16 @@ export default function Centerblock() {
             </svg>
           </div>
         </div>
-
-        <Playlist />
+        <div className={styles.content__playlist}>
+          {data.map((track, index) => (
+            <Track
+              key={track._id}
+              track={track}
+              playlist={data} // Передаем весь массив треков как плейлист
+              index={index} // Передаем индекс текущего трека
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
