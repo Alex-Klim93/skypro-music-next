@@ -11,7 +11,6 @@ export default function Filter({
   items,
   isOpen,
   onClose,
-  filterType,
 }: FilterProps) {
   if (!isOpen) return null;
 
