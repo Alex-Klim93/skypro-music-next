@@ -5,47 +5,47 @@ import Bar from './components/Bar/Bar';
 import MainNav from './components/MainNav/MainNav';
 import MainSidebar from './components/MainSidebar/MainSidebar';
 import Centerblock from './components/Centerblock/Centerblock';
-import { useEffect, useState } from 'react';
-import { getTracks } from './services/traks/trackApi';
-import { TrackType } from './sharedTypes/sharedTypes';
-import { error } from 'console';
-import { AxiosError } from 'axios';
+import { useEffect } from 'react';
+import { getTracks } from '@/app/services/traks/trackApi';
+import { useAppDispatch, useAppSelector } from './store/store';
+import { setAllTracks } from './store/features/trackSlice';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const [Tracks, setTracks] = useState<TrackType[]>([]);
+  const dispatch = useAppDispatch();
+  const allTracks = useAppSelector((state) => state.tracks.allTracks);
+  const router = useRouter();
 
   useEffect(() => {
-    getTracks()
-      .then((res) => {
-        setTracks(res);
-        alert('res');
-      })
-      .catch((error) => {
-        if (error instanceof AxiosError) {
-          if (error.response) {
-            // Запрос был сделан, и сервер ответил кодом состояния, который
-            // выходит за пределы 2xx
-            console.log(error.response.data);
-            console.log(error.response.status);
-            console.log(error.response.headers);
-          } else if (error.request) {
-            // Запрос был сделан, но ответ не получен
-            // `error.request`- это экземпляр XMLHttpRequest в браузере и экземпляр
-            // http.ClientRequest в node.js
-            console.log(error.request);
-          } else {
-            // Произошло что-то при настройке запроса, вызвавшее ошибку
-            console.log('Error', error.message);
-          }
-        }
-      });
-  }, []);
+    const checkAuth = () => {
+      const user = localStorage.getItem('user');
+      if (!user) {
+        router.push('/Signin');
+        return false;
+      }
+      return true;
+    };
+
+    if (checkAuth()) {
+      loadTracks();
+    }
+  }, [router, dispatch]);
+
+  const loadTracks = async () => {
+    try {
+      const tracksData = await getTracks();
+      dispatch(setAllTracks(tracksData));
+    } catch (error) {
+      console.error('Ошибка загрузки треков:', error);
+    }
+  };
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.container}>
         <main className={styles.main}>
           <MainNav />
-          <Centerblock />
+          <Centerblock tracks={allTracks} title="Треки" />
           <MainSidebar />
         </main>
         <Bar />
@@ -53,7 +53,4 @@ export default function Home() {
       </div>
     </div>
   );
-}
-function getTrecks() {
-  throw new Error('Function not implemented.');
 }
