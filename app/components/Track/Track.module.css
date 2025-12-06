@@ -160,3 +160,18 @@
   text-align: right;
   color: #696969;
 }
+
+.favoriteButton {
+  background: none;
+  border: none;
+}
+
+.favoriteIconActive {
+  fill: #4a90e2 !important;
+  stroke: #4a90e2 !important;
+}
+
+.removeButton {
+  background: none;
+  border: none;
+}

@@ -10,8 +10,9 @@ import { formatTime } from '@/app/utils/helper';
 import {
   addToFavorites,
   removeFromFavorites,
+  getFavoriteTracks,
 } from '@/app/services/traks/trackApi';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 type trackTypeProp = {
@@ -25,8 +26,28 @@ export default function Track({ track, playlist, index }: trackTypeProp) {
   const currentTrack = useAppSelector((state) => state.tracks.currentTrack);
   const isPlay = useAppSelector((state) => state.tracks.isPlay);
   const [loading, setLoading] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+
+  // Загружаем избранные треки и проверяем, находится ли текущий трек в избранном
+  useEffect(() => {
+    const checkIfFavorite = async () => {
+      try {
+        if (pathname === '/') {
+          const favoriteTracks = await getFavoriteTracks();
+          const favoriteTrackIds = favoriteTracks.map((t) => t._id);
+          setIsFavorite(favoriteTrackIds.includes(track._id));
+        } else if (pathname === '/MyTracks') {
+          setIsFavorite(true); // На странице "Мои треки" все треки считаются избранными
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки избранных треков:', error);
+      }
+    };
+
+    checkIfFavorite();
+  }, [track._id, pathname]);
 
   const isCurrentTrack = currentTrack?._id === track._id;
 
@@ -43,9 +64,16 @@ export default function Track({ track, playlist, index }: trackTypeProp) {
 
     try {
       if (pathname === '/') {
-        await addToFavorites(track._id);
+        if (isFavorite) {
+          await removeFromFavorites(track._id);
+          setIsFavorite(false);
+        } else {
+          await addToFavorites(track._id);
+          setIsFavorite(true);
+        }
       } else if (pathname === '/MyTracks') {
         await removeFromFavorites(track._id);
+        setIsFavorite(false);
         // Обновляем список через 300мс
         setTimeout(() => {
           window.location.reload();
@@ -105,10 +133,18 @@ export default function Track({ track, playlist, index }: trackTypeProp) {
             <button
               onClick={handleFavoriteClick}
               disabled={loading}
-              className={styles.favoriteButton}
-              title="Добавить в избранное"
+              className={classNames(styles.favoriteButton, {
+                [styles.favoriteActive]: isFavorite,
+              })}
+              title={
+                isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'
+              }
             >
-              <svg className={styles.track__timeSvg}>
+              <svg
+                className={classNames(styles.track__timeSvg, {
+                  [styles.favoriteIconActive]: isFavorite,
+                })}
+              >
                 <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
               </svg>
             </button>
