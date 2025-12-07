@@ -1,13 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './Search.module.css';
 
-export default function Search() {
+interface SearchProps {
+  onSearch: (query: string) => void;
+}
+
+export default function Search({ onSearch }: SearchProps) {
   const [searchInput, setSearchInput] = useState('');
-  const onSearchInput = (e:React.ChangeEvent<HTMLInputElement>) => {
+
+  const onSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(e.target.value);
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearch(searchInput);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, onSearch]);
+
   return (
     <div className={styles.centerblock__search}>
       <svg className={styles.search__svg}>

@@ -53,3 +53,8 @@
   color: #b672ff;
   text-decoration: underline;
 }
+
+.filterItemSelected {
+  background-color: #580EA2; /* Фиолетовый цвет */
+  color: white;
+}
