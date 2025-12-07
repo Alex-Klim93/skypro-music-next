@@ -105,7 +105,7 @@ export default function SelectionPage() {
           <main className={styles.main}>
             <MainNav />
             <div style={{ padding: '20px', textAlign: 'center' }}>
-              <h2>Загрузка подборки...</h2>
+              <h2 style={{ color: 'white' }}>Загрузка подборки...</h2>
             </div>
             <MainSidebar />
           </main>
