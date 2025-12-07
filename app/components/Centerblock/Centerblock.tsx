@@ -16,7 +16,6 @@ import { TrackType } from '@/app/sharedTypes/sharedTypes';
 interface CenterblockProps {
   tracks: TrackType[];
   title?: string;
-  // Добавляем пропс для списка избранных ID
   favoriteTrackIds?: number[];
 }
 
@@ -120,13 +119,12 @@ export default function Centerblock({
                 track={track}
                 playlist={tracks}
                 index={index}
-                // Передаем предварительно вычисленный статус избранного
                 isInitiallyFavorite={favoriteTrackIds.includes(track._id)}
               />
             ))
           ) : (
             <div className={styles.emptyTracks}>
-              <p className={styles.emptyTracks_message}>В этой подборке пока нет треков</p>
+              <p>В этой подборке пока нет треков</p>
             </div>
           )}
         </div>

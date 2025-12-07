@@ -38,7 +38,6 @@ const trackSlice = createSlice({
     setAllTracks: (state, action: PayloadAction<TrackType[]>) => {
       state.allTracks = action.payload;
     },
-
     setCurrentTrack: (
       state,
       action: PayloadAction<{
@@ -66,34 +65,26 @@ const trackSlice = createSlice({
       }
       state.currentTime = 0;
     },
-
     setIsPlay: (state, action: PayloadAction<boolean>) => {
       state.isPlay = action.payload;
     },
-
     setCurrentTime: (state, action: PayloadAction<number>) => {
       state.currentTime = action.payload;
     },
-
     setDuration: (state, action: PayloadAction<number>) => {
       state.duration = action.payload;
     },
-
     setVolume: (state, action: PayloadAction<number>) => {
       state.volume = action.payload;
     },
-
     setIsLoop: (state, action: PayloadAction<boolean>) => {
       state.isLoop = action.payload;
     },
-
     setIsShuffle: (state, action: PayloadAction<boolean>) => {
       const newShuffleState = action.payload;
-
       if (newShuffleState && !state.isShuffle) {
         if (state.originalPlaylist.length > 0) {
           state.shuffledPlaylist = shuffleArray([...state.originalPlaylist]);
-
           const currentTrackId = state.currentTrack?._id;
           if (currentTrackId) {
             const newIndex = state.shuffledPlaylist.findIndex(
@@ -117,10 +108,8 @@ const trackSlice = createSlice({
           }
         }
       }
-
       state.isShuffle = newShuffleState;
     },
-
     nextTrack: (state) => {
       if (state.currentPlaylist.length > 0 && state.currentTrackIndex !== -1) {
         const nextIndex =
@@ -131,7 +120,6 @@ const trackSlice = createSlice({
         state.isPlay = true;
       }
     },
-
     prevTrack: (state) => {
       if (state.currentPlaylist.length > 0 && state.currentTrackIndex !== -1) {
         const prevIndex = state.currentTrackIndex - 1;
@@ -166,5 +154,4 @@ export const {
   nextTrack,
   prevTrack,
 } = trackSlice.actions;
-
 export const trackSliceReducer = trackSlice.reducer;

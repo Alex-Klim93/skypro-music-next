@@ -66,7 +66,7 @@ export type SelectionType = {
   _id: number;
   name: string;
   logo: string | null;
-  items: any[];
+  items: number[] | TrackType[]; // Может быть массив ID или объектов треков
   tracks: any[];
 };
 
@@ -74,7 +74,6 @@ export const getAllSelections = (): Promise<SelectionType[]> => {
   return api.get('/catalog/selection/all').then((res) => {
     console.log('API Response для подборок:', res.data);
 
-    // Проверяем разные возможные форматы ответа
     if (res.data && Array.isArray(res.data)) {
       return res.data;
     } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
@@ -94,8 +93,20 @@ export const getAllSelections = (): Promise<SelectionType[]> => {
 
 export const getSelectionById = (id: number): Promise<SelectionType> => {
   return api.get(`/catalog/selection/${id}/`).then((res) => {
-    if (res.data) {
-      return res.data;
+    console.log('API Response для подборки ID', id, ':', res.data);
+
+    // Проверяем структуру
+    const selection = res.data?.data || res.data;
+
+    if (selection) {
+      console.log('Items в подборке:', selection.items);
+      console.log('Тип items:', typeof selection.items);
+      console.log('Это массив?', Array.isArray(selection.items));
+      if (Array.isArray(selection.items) && selection.items.length > 0) {
+        console.log('Первый элемент items:', selection.items[0]);
+        console.log('Тип первого элемента:', typeof selection.items[0]);
+      }
+      return selection;
     }
     throw new Error('Selection not found');
   });

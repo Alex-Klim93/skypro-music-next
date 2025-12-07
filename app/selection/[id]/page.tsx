@@ -18,7 +18,6 @@ export default function SelectionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
-
   const allTracks = useAppSelector((state) => state.tracks.allTracks);
 
   const id = Number(params.id);
@@ -42,24 +41,49 @@ export default function SelectionPage() {
     try {
       setLoading(true);
 
-      // Если треков нет в Redux, загружаем их
+      // 1. Если треков нет в Redux, загружаем их
       if (allTracks.length === 0) {
         const tracksData = await getAllTracks();
         dispatch(setAllTracks(tracksData));
       }
 
-      // Получаем данные подборки
+      // 2. Получаем подборку
       const selection = await getSelectionById(id);
+      console.log('Подборка получена:', selection);
+
+      // 3. Устанавливаем название
       setSelectionName(selection.name || altName);
 
-      // Фильтруем треки по ID из items
-      const selectionTracks = allTracks.filter((track) =>
-        selection.items?.includes(track._id),
-      );
+      // 4. Обрабатываем items
+      if (selection.items && Array.isArray(selection.items)) {
+        const firstItem = selection.items[0];
 
-      setTracks(selectionTracks);
-    } catch (err) {
+        // Если items содержат ID (числа)
+        if (typeof firstItem === 'number') {
+          console.log('Items содержат ID треков:', selection.items);
+          // Фильтруем треки из Redux по этим ID
+          const tracksIds = selection.items;
+          const filteredTracks = allTracks.filter((track) =>
+            tracksIds.includes(track._id),
+          );
+          console.log('Отфильтровано треков:', filteredTracks.length);
+          setTracks(filteredTracks);
+        }
+        // Если items содержат объекты треков
+        else if (firstItem && typeof firstItem === 'object' && firstItem._id) {
+          console.log('Items содержат объекты треков');
+          setTracks(selection.items as TrackType[]);
+        } else {
+          console.log('Неизвестный формат items');
+          setTracks([]);
+        }
+      } else {
+        console.log('Нет items или это не массив');
+        setTracks([]);
+      }
+    } catch (err: any) {
       console.error('Ошибка загрузки подборки:', err);
+      setTracks([]);
     } finally {
       setLoading(false);
     }
@@ -72,7 +96,7 @@ export default function SelectionPage() {
           <main className={styles.main}>
             <MainNav />
             <div style={{ padding: '20px', textAlign: 'center' }}>
-              <h2>Загрузка...</h2>
+              <h2>Загрузка подборки...</h2>
             </div>
             <MainSidebar />
           </main>
