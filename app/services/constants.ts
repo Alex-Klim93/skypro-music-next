@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
   LOGIN: '/user/login/',
   TOKEN: '/user/token/',
   TOKEN_REFRESH: '/user/token/refresh/',
+  LOGOUT: '/user/logout/', // Добавили путь для выхода
 
   // Треки
   TRACKS_ALL: '/catalog/track/all/',
@@ -23,6 +24,7 @@ export const API_ENDPOINTS = {
 // Время жизни токенов (в секундах)
 export const TOKEN_EXPIRY = {
   ACCESS: 200, // Access токен живет 200 секунд
+  REFRESH: 86400, // Refresh токен живет 1 день (86400 секунд)
 };
 
 // Заголовки

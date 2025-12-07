@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { logoutUser } from './authApi';
 
 interface AuthState {
   accessToken: string | null;
@@ -55,15 +56,23 @@ const authSlice = createSlice({
       }
     },
 
+    // Обновленный logout с поддержкой серверного выхода
     logout: (state) => {
+      // Сохраняем refresh токен перед очисткой
+      const refreshToken = state.refreshToken;
+
       state.accessToken = null;
       state.refreshToken = null;
       state.user = null;
 
       if (typeof window !== 'undefined') {
+        // Очищаем локальное хранилище
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
+
+        // Вызываем серверный logout
+        logoutUser(refreshToken);
       }
     },
   },

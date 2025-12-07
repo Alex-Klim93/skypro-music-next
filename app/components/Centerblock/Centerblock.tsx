@@ -8,7 +8,7 @@ import {
   getUniqueGenreValues,
   getUniqueYears,
 } from '@/app/utils/helper';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Filter from '../Filter/Filter';
 import Track from '../Track/Track';
 import { TrackType } from '@/app/sharedTypes/sharedTypes';
@@ -23,6 +23,11 @@ export default function Centerblock({
   title = 'Треки',
 }: CenterblockProps) {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+  // Refs для кнопок фильтров
+  const authorButtonRef = useRef<HTMLButtonElement>(null);
+  const yearButtonRef = useRef<HTMLButtonElement>(null);
+  const genreButtonRef = useRef<HTMLButtonElement>(null);
 
   const uniqueAuthors = getUniqueValuesByKey(tracks, 'author');
   const uniqueGenres = getUniqueGenreValues(tracks);
@@ -49,6 +54,19 @@ export default function Centerblock({
     }
   };
 
+  const getButtonRef = () => {
+    switch (activeFilter) {
+      case 'author':
+        return authorButtonRef;
+      case 'genre':
+        return genreButtonRef;
+      case 'year':
+        return yearButtonRef;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className={styles.centerblock}>
       <Search />
@@ -58,6 +76,7 @@ export default function Centerblock({
         <div className={styles.filter__title}>Искать по:</div>
 
         <button
+          ref={authorButtonRef}
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === 'author',
           })}
@@ -67,6 +86,7 @@ export default function Centerblock({
         </button>
 
         <button
+          ref={yearButtonRef}
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === 'year',
           })}
@@ -76,6 +96,7 @@ export default function Centerblock({
         </button>
 
         <button
+          ref={genreButtonRef}
           className={classNames(styles.filter__button, {
             [styles.active]: activeFilter === 'genre',
           })}
@@ -89,6 +110,7 @@ export default function Centerblock({
           isOpen={activeFilter !== null}
           onClose={handleCloseFilter}
           filterType={activeFilter}
+          buttonRef={getButtonRef()}
         />
       </div>
 
