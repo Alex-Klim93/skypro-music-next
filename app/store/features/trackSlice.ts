@@ -2,7 +2,7 @@ import { TrackType } from '@/app/sharedTypes/sharedTypes';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 type initialStateType = {
-  allTracks: TrackType[]; // ДОБАВЬТЕ ЭТО ПОЛЕ
+  allTracks: TrackType[];
   currentTrack: null | TrackType;
   isPlay: boolean;
   currentTime: number;
@@ -17,7 +17,7 @@ type initialStateType = {
 };
 
 const initialState: initialStateType = {
-  allTracks: [], // ДОБАВЬТЕ ЭТО
+  allTracks: [],
   currentTrack: null,
   isPlay: false,
   currentTime: 0,
@@ -35,7 +35,6 @@ const trackSlice = createSlice({
   name: 'tracks',
   initialState,
   reducers: {
-    // ДОБАВЬТЕ ЭТОТ REDUCER
     setAllTracks: (state, action: PayloadAction<TrackType[]>) => {
       state.allTracks = action.payload;
     },
@@ -156,7 +155,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export const {
-  setAllTracks, // ДОБАВЬТЕ ЭКСПОРТ
+  setAllTracks,
   setCurrentTrack,
   setIsPlay,
   setCurrentTime,
@@ -167,4 +166,5 @@ export const {
   nextTrack,
   prevTrack,
 } = trackSlice.actions;
+
 export const trackSliceReducer = trackSlice.reducer;

@@ -10,7 +10,6 @@ import { formatTime } from '@/app/utils/helper';
 import {
   addToFavorites,
   removeFromFavorites,
-  getFavoriteTracks,
 } from '@/app/services/traks/trackApi';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -19,35 +18,29 @@ type trackTypeProp = {
   track: TrackType;
   playlist: TrackType[];
   index: number;
+  // Добавляем пропс для предварительной проверки избранного
+  isInitiallyFavorite?: boolean;
 };
 
-export default function Track({ track, playlist, index }: trackTypeProp) {
+export default function Track({
+  track,
+  playlist,
+  index,
+  isInitiallyFavorite = false,
+}: trackTypeProp) {
   const dispatch = useAppDispatch();
   const currentTrack = useAppSelector((state) => state.tracks.currentTrack);
   const isPlay = useAppSelector((state) => state.tracks.isPlay);
   const [loading, setLoading] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(isInitiallyFavorite);
   const pathname = usePathname();
   const router = useRouter();
 
-  // Загружаем избранные треки и проверяем, находится ли текущий трек в избранном
+  // Убираем отдельный запрос для каждого трека - используем пропс
+  // useEffect только для синхронизации если изначальное состояние изменилось
   useEffect(() => {
-    const checkIfFavorite = async () => {
-      try {
-        if (pathname === '/') {
-          const favoriteTracks = await getFavoriteTracks();
-          const favoriteTrackIds = favoriteTracks.map((t) => t._id);
-          setIsFavorite(favoriteTrackIds.includes(track._id));
-        } else if (pathname === '/MyTracks') {
-          setIsFavorite(true); // На странице "Мои треки" все треки считаются избранными
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки избранных треков:', error);
-      }
-    };
-
-    checkIfFavorite();
-  }, [track._id, pathname]);
+    setIsFavorite(isInitiallyFavorite);
+  }, [isInitiallyFavorite]);
 
   const isCurrentTrack = currentTrack?._id === track._id;
 
@@ -74,15 +67,12 @@ export default function Track({ track, playlist, index }: trackTypeProp) {
       } else if (pathname === '/MyTracks') {
         await removeFromFavorites(track._id);
         setIsFavorite(false);
-        // Обновляем список через 300мс
-        setTimeout(() => {
-          window.location.reload();
-        }, 300);
+        // Используем router.refresh вместо полной перезагрузки
+        router.refresh();
       }
     } catch (error: any) {
       console.error('Ошибка обновления избранного:', error);
 
-      // Если ошибка авторизации, редирект на страницу входа
       if (error.response?.status === 401) {
         localStorage.removeItem('user');
         localStorage.removeItem('access_token');

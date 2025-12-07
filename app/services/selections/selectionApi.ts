@@ -6,7 +6,6 @@ const api = axios.create({
   baseURL: BASE_URL,
 });
 
-// Интерцептор для добавления токена
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('access_token');
@@ -17,7 +16,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Интерцептор для обновления токена
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -68,16 +66,18 @@ export type SelectionType = {
   _id: number;
   name: string;
   logo: string | null;
-  items: TrackType[];
-  tracks: TrackType[];
+  items: any[];
+  tracks: any[];
 };
 
 export const getAllSelections = (): Promise<SelectionType[]> => {
   return api.get('/catalog/selection/all').then((res) => {
-    console.log('API Response for selections:', res.data);
+    console.log('API Response для подборок:', res.data);
+
+    // Проверяем разные возможные форматы ответа
     if (res.data && Array.isArray(res.data)) {
       return res.data;
-    } else if (res.data && Array.isArray(res.data.data)) {
+    } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
       return res.data.data;
     } else if (
       res.data &&
@@ -86,74 +86,17 @@ export const getAllSelections = (): Promise<SelectionType[]> => {
     ) {
       return res.data.results;
     }
+
+    console.log('Некорректный формат данных для подборок:', res.data);
     return [];
   });
 };
 
 export const getSelectionById = (id: number): Promise<SelectionType> => {
   return api.get(`/catalog/selection/${id}/`).then((res) => {
-    console.log('API Response for selection by id:', res.data);
     if (res.data) {
-      // Проверяем разные структуры ответа для получения треков
-      const selectionData = res.data;
-
-      // 1. Проверяем поле items
-      if (selectionData.items && Array.isArray(selectionData.items)) {
-        return selectionData;
-      }
-
-      // 2. Проверяем поле tracks
-      if (selectionData.tracks && Array.isArray(selectionData.tracks)) {
-        return selectionData;
-      }
-
-      // 3. Проверяем прямое содержимое (если треки сразу в ответе)
-      if (Array.isArray(selectionData)) {
-        return {
-          _id: id,
-          name: 'Подборка',
-          logo: null,
-          items: selectionData,
-          tracks: selectionData,
-        };
-      }
-
-      // 4. Если структура неизвестна, возвращаем с пустыми треками
-      return {
-        _id: selectionData._id || id,
-        name: selectionData.name || 'Подборка',
-        logo: selectionData.logo || null,
-        items: [],
-        tracks: [],
-      };
+      return res.data;
     }
     throw new Error('Selection not found');
   });
 };
-
-export const createSelection = (
-  name: string,
-  logoFile: File | null,
-): Promise<SelectionType> => {
-  const formData = new FormData();
-  formData.append('name', name);
-
-  if (logoFile) {
-    formData.append('logo', logoFile);
-  }
-
-  return api
-    .post('/catalog/selection', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-    .then((res) => {
-      console.log('API Response for create selection:', res.data);
-      if (res.data) {
-        return res.data;
-      }
-      throw new Error('Failed to create selection');
-    });
-};
-
