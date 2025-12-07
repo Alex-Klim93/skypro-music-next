@@ -40,30 +40,39 @@ export default function SelectionPage() {
   const loadSelection = async () => {
     try {
       setLoading(true);
+      console.log('Начинаем загрузку подборки ID:', id);
 
-      // 1. Если треков нет в Redux, загружаем их
-      if (allTracks.length === 0) {
+      // ВСЕГДА загружаем все треки если их нет или обновляем
+      let currentAllTracks = allTracks;
+      if (currentAllTracks.length === 0) {
+        console.log('Треков в Redux нет, загружаем...');
         const tracksData = await getAllTracks();
+        console.log('Загружено треков:', tracksData.length);
         dispatch(setAllTracks(tracksData));
+        currentAllTracks = tracksData;
+      } else {
+        console.log('Треки уже в Redux:', currentAllTracks.length);
       }
 
-      // 2. Получаем подборку
+      // Получаем подборку
+      console.log('Запрашиваем подборку с API...');
       const selection = await getSelectionById(id);
-      console.log('Подборка получена:', selection);
+      console.log('Получена подборка:', selection);
+      console.log('Items подборки:', selection.items);
 
-      // 3. Устанавливаем название
+      // Устанавливаем название
       setSelectionName(selection.name || altName);
 
-      // 4. Обрабатываем items
+      // Обрабатываем items
       if (selection.items && Array.isArray(selection.items)) {
         const firstItem = selection.items[0];
 
         // Если items содержат ID (числа)
         if (typeof firstItem === 'number') {
           console.log('Items содержат ID треков:', selection.items);
-          // Фильтруем треки из Redux по этим ID
+          // Фильтруем треки по ID
           const tracksIds = selection.items;
-          const filteredTracks = allTracks.filter((track) =>
+          const filteredTracks = currentAllTracks.filter((track) =>
             tracksIds.includes(track._id),
           );
           console.log('Отфильтровано треков:', filteredTracks.length);

@@ -12,7 +12,7 @@ export default function SidebarBlock() {
         <div className={styles.sidebar__item}>
           <Link
             className={styles.sidebar__link}
-            href="/selection/2?name=Плейлист дня" // ID=2
+            href="/selection/2?name=Плейлист дня"
           >
             <Image
               className={styles.sidebar__img}
@@ -26,7 +26,7 @@ export default function SidebarBlock() {
         <div className={styles.sidebar__item}>
           <Link
             className={styles.sidebar__link}
-            href="/selection/3?name=Танцевальные хиты" // ID=3
+            href="/selection/3?name=Танцевальные хиты"
           >
             <Image
               className={styles.sidebar__img}
@@ -40,7 +40,7 @@ export default function SidebarBlock() {
         <div className={styles.sidebar__item}>
           <Link
             className={styles.sidebar__link}
-            href="/selection/4?name=Инди-заряд" // ID=4
+            href="/selection/4?name=Инди-заряд"
           >
             <Image
               className={styles.sidebar__img}

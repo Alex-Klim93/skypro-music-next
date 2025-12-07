@@ -2,7 +2,8 @@ import { TrackType } from '@/app/sharedTypes/sharedTypes';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 type initialStateType = {
-  allTracks: TrackType[];
+  allTracks: TrackType[]; // ВСЕ треки с сервера
+  favoriteTracks: TrackType[]; // Только избранные треки
   currentTrack: null | TrackType;
   isPlay: boolean;
   currentTime: number;
@@ -17,7 +18,8 @@ type initialStateType = {
 };
 
 const initialState: initialStateType = {
-  allTracks: [],
+  allTracks: [], // Для главной и подборок
+  favoriteTracks: [], // Для страницы "Мой плейлист"
   currentTrack: null,
   isPlay: false,
   currentTime: 0,
@@ -35,9 +37,16 @@ const trackSlice = createSlice({
   name: 'tracks',
   initialState,
   reducers: {
+    // Для главной страницы и подборок
     setAllTracks: (state, action: PayloadAction<TrackType[]>) => {
       state.allTracks = action.payload;
     },
+
+    // Для страницы "Мой плейлист"
+    setFavoriteTracks: (state, action: PayloadAction<TrackType[]>) => {
+      state.favoriteTracks = action.payload;
+    },
+
     setCurrentTrack: (
       state,
       action: PayloadAction<{
@@ -144,6 +153,7 @@ function shuffleArray<T>(array: T[]): T[] {
 
 export const {
   setAllTracks,
+  setFavoriteTracks,
   setCurrentTrack,
   setIsPlay,
   setCurrentTime,

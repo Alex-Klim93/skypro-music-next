@@ -27,13 +27,25 @@ export default function Home() {
     };
 
     if (checkAuth()) {
-      loadTracks();
+      // Загружаем треки только если их нет в Redux
+      if (allTracks.length === 0) {
+        console.log('Загружаем все треки...');
+        loadTracks();
+      } else {
+        console.log('Треки уже загружены:', allTracks.length);
+      }
     }
-  }, [router, dispatch]);
+  }, [router, dispatch, allTracks.length]);
 
   const loadTracks = async () => {
     try {
+      console.log('Начинаем загрузку всех треков...');
       const tracksData = await getTracks();
+      console.log('Треки загружены:', tracksData.length);
+      console.log(
+        'Пример ID треков:',
+        tracksData.slice(0, 5).map((t) => t._id),
+      );
       dispatch(setAllTracks(tracksData));
     } catch (error) {
       console.error('Ошибка загрузки треков:', error);

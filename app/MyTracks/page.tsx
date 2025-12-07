@@ -7,13 +7,13 @@ import MainSidebar from '@/app/components/MainSidebar/MainSidebar';
 import Centerblock from '@/app/components/Centerblock/Centerblock';
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/store/store';
-import { setAllTracks } from '@/app/store/features/trackSlice';
+import { setFavoriteTracks } from '@/app/store/features/trackSlice';
 import { useRouter } from 'next/navigation';
 import { getFavoriteTracks } from '@/app/services/traks/trackApi';
 
 export default function MyTracksPage() {
   const dispatch = useAppDispatch();
-  const allTracks = useAppSelector((state) => state.tracks.allTracks);
+  const favoriteTracks = useAppSelector((state) => state.tracks.favoriteTracks);
   const router = useRouter();
 
   useEffect(() => {
@@ -28,8 +28,10 @@ export default function MyTracksPage() {
 
   const loadMyTracks = async () => {
     try {
+      console.log('Загружаем избранные треки...');
       const tracksData = await getFavoriteTracks();
-      dispatch(setAllTracks(tracksData));
+      console.log('Избранные треки загружены:', tracksData.length);
+      dispatch(setFavoriteTracks(tracksData));
     } catch (error: any) {
       console.error('Ошибка загрузки плейлиста:', error);
 
@@ -47,7 +49,7 @@ export default function MyTracksPage() {
       <div className={styles.container}>
         <main className={styles.main}>
           <MainNav />
-          <Centerblock tracks={allTracks} title="Мой плейлист" />
+          <Centerblock tracks={favoriteTracks} title="Мой плейлист" />
           <MainSidebar />
         </main>
         <Bar />
