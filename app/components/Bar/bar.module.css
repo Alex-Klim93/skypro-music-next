@@ -376,3 +376,14 @@
   stroke: #b672ff;
   fill: #b672ff;
 }
+
+.trackPlay__like.favoriteActive .trackPlay__likeSvg {
+  fill: #4a90e2;
+  stroke: #4a90e2;
+}
+
+.trackPlay__like.active .trackPlay__likeSvg {
+  fill: #4a90e2;
+  stroke: #4a90e2;
+}
+

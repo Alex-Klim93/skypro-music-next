@@ -16,13 +16,11 @@ import { TrackType } from '@/app/sharedTypes/sharedTypes';
 interface CenterblockProps {
   tracks: TrackType[];
   title?: string;
-  favoriteTrackIds?: number[];
 }
 
 export default function Centerblock({
   tracks,
   title = 'Треки',
-  favoriteTrackIds = [],
 }: CenterblockProps) {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
@@ -119,7 +117,6 @@ export default function Centerblock({
                 track={track}
                 playlist={tracks}
                 index={index}
-                isInitiallyFavorite={favoriteTrackIds.includes(track._id)}
               />
             ))
           ) : (

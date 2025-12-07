@@ -4,6 +4,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 type initialStateType = {
   allTracks: TrackType[]; // ВСЕ треки с сервера
   favoriteTracks: TrackType[]; // Только избранные треки
+  favoriteTrackIds: number[]; // Только ID избранных треков для быстрой проверки
   currentTrack: null | TrackType;
   isPlay: boolean;
   currentTime: number;
@@ -20,6 +21,7 @@ type initialStateType = {
 const initialState: initialStateType = {
   allTracks: [], // Для главной и подборок
   favoriteTracks: [], // Для страницы "Мой плейлист"
+  favoriteTrackIds: [], // Для быстрой проверки
   currentTrack: null,
   isPlay: false,
   currentTime: 0,
@@ -45,6 +47,27 @@ const trackSlice = createSlice({
     // Для страницы "Мой плейлист"
     setFavoriteTracks: (state, action: PayloadAction<TrackType[]>) => {
       state.favoriteTracks = action.payload;
+      state.favoriteTrackIds = action.payload.map((track) => track._id);
+    },
+
+    // Добавить трек в избранное
+    addToFavoritesState: (state, action: PayloadAction<TrackType>) => {
+      const track = action.payload;
+      if (!state.favoriteTrackIds.includes(track._id)) {
+        state.favoriteTracks.push(track);
+        state.favoriteTrackIds.push(track._id);
+      }
+    },
+
+    // Удалить трек из избранного
+    removeFromFavoritesState: (state, action: PayloadAction<number>) => {
+      const trackId = action.payload;
+      state.favoriteTracks = state.favoriteTracks.filter(
+        (track) => track._id !== trackId,
+      );
+      state.favoriteTrackIds = state.favoriteTrackIds.filter(
+        (id) => id !== trackId,
+      );
     },
 
     setCurrentTrack: (
@@ -154,6 +177,8 @@ function shuffleArray<T>(array: T[]): T[] {
 export const {
   setAllTracks,
   setFavoriteTracks,
+  addToFavoritesState,
+  removeFromFavoritesState,
   setCurrentTrack,
   setIsPlay,
   setCurrentTime,

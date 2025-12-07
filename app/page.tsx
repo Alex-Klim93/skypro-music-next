@@ -6,14 +6,15 @@ import MainNav from './components/MainNav/MainNav';
 import MainSidebar from './components/MainSidebar/MainSidebar';
 import Centerblock from './components/Centerblock/Centerblock';
 import { useEffect } from 'react';
-import { getTracks } from '@/app/services/traks/trackApi';
+import { getTracks, getFavoriteTracks } from '@/app/services/traks/trackApi';
 import { useAppDispatch, useAppSelector } from './store/store';
-import { setAllTracks } from './store/features/trackSlice';
+import { setAllTracks, setFavoriteTracks } from './store/features/trackSlice';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const dispatch = useAppDispatch();
   const allTracks = useAppSelector((state) => state.tracks.allTracks);
+  const favoriteTracks = useAppSelector((state) => state.tracks.favoriteTracks);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,25 +31,29 @@ export default function Home() {
       // Загружаем треки только если их нет в Redux
       if (allTracks.length === 0) {
         console.log('Загружаем все треки...');
-        loadTracks();
+        loadAllData();
       } else {
         console.log('Треки уже загружены:', allTracks.length);
       }
     }
   }, [router, dispatch, allTracks.length]);
 
-  const loadTracks = async () => {
+  const loadAllData = async () => {
     try {
       console.log('Начинаем загрузку всех треков...');
       const tracksData = await getTracks();
       console.log('Треки загружены:', tracksData.length);
-      console.log(
-        'Пример ID треков:',
-        tracksData.slice(0, 5).map((t) => t._id),
-      );
       dispatch(setAllTracks(tracksData));
+
+      // Загружаем избранные треки
+      if (favoriteTracks.length === 0) {
+        console.log('Загружаем избранные треки...');
+        const favoriteTracksData = await getFavoriteTracks();
+        console.log('Избранные треки загружены:', favoriteTracksData.length);
+        dispatch(setFavoriteTracks(favoriteTracksData));
+      }
     } catch (error) {
-      console.error('Ошибка загрузки треков:', error);
+      console.error('Ошибка загрузки данных:', error);
     }
   };
 

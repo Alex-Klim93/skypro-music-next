@@ -5,7 +5,7 @@ import Bar from '@/app/components/Bar/Bar';
 import MainNav from '@/app/components/MainNav/MainNav';
 import MainSidebar from '@/app/components/MainSidebar/MainSidebar';
 import Centerblock from '@/app/components/Centerblock/Centerblock';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/store/store';
 import { setFavoriteTracks } from '@/app/store/features/trackSlice';
 import { useRouter } from 'next/navigation';
@@ -15,6 +15,7 @@ export default function MyTracksPage() {
   const dispatch = useAppDispatch();
   const favoriteTracks = useAppSelector((state) => state.tracks.favoriteTracks);
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -28,6 +29,7 @@ export default function MyTracksPage() {
 
   const loadMyTracks = async () => {
     try {
+      setLoading(true);
       console.log('Загружаем избранные треки...');
       const tracksData = await getFavoriteTracks();
       console.log('Избранные треки загружены:', tracksData.length);
@@ -41,8 +43,27 @@ export default function MyTracksPage() {
         localStorage.removeItem('refresh_token');
         router.push('/Signin');
       }
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.container}>
+          <main className={styles.main}>
+            <MainNav />
+            <div style={{ padding: '20px', textAlign: 'center' }}>
+              <h2 style={{ color: 'white' }}>Загрузка плейлиста...</h2>
+            </div>
+            <MainSidebar />
+          </main>
+          <Bar />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.wrapper}>

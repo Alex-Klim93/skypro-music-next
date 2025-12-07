@@ -3,7 +3,12 @@
 import styles from './Track.module.css';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/app/store/store';
-import { setCurrentTrack, setIsPlay } from '@/app/store/features/trackSlice';
+import {
+  setCurrentTrack,
+  setIsPlay,
+  addToFavoritesState,
+  removeFromFavoritesState,
+} from '@/app/store/features/trackSlice';
 import { TrackType } from '@/app/sharedTypes/sharedTypes';
 import classNames from 'classnames';
 import { formatTime } from '@/app/utils/helper';
@@ -18,29 +23,25 @@ type trackTypeProp = {
   track: TrackType;
   playlist: TrackType[];
   index: number;
-  // Добавляем пропс для предварительной проверки избранного
-  isInitiallyFavorite?: boolean;
 };
 
-export default function Track({
-  track,
-  playlist,
-  index,
-  isInitiallyFavorite = false,
-}: trackTypeProp) {
+export default function Track({ track, playlist, index }: trackTypeProp) {
   const dispatch = useAppDispatch();
   const currentTrack = useAppSelector((state) => state.tracks.currentTrack);
+  const favoriteTrackIds = useAppSelector(
+    (state) => state.tracks.favoriteTrackIds,
+  );
   const isPlay = useAppSelector((state) => state.tracks.isPlay);
   const [loading, setLoading] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(isInitiallyFavorite);
   const pathname = usePathname();
   const router = useRouter();
 
-  // Убираем отдельный запрос для каждого трека - используем пропс
-  // useEffect только для синхронизации если изначальное состояние изменилось
-  useEffect(() => {
-    setIsFavorite(isInitiallyFavorite);
-  }, [isInitiallyFavorite]);
+  // На странице MyTracks ВСЕ треки уже в избранном, но мы их не подсвечиваем
+  // На других страницах проверяем через Redux
+  const isFavorite =
+    pathname === '/MyTracks'
+      ? false // На странице MyTracks не подсвечиваем
+      : favoriteTrackIds.includes(track._id);
 
   const isCurrentTrack = currentTrack?._id === track._id;
 
@@ -58,16 +59,19 @@ export default function Track({
     try {
       if (pathname === '/') {
         if (isFavorite) {
+          // Удаляем из избранного
           await removeFromFavorites(track._id);
-          setIsFavorite(false);
+          dispatch(removeFromFavoritesState(track._id));
         } else {
+          // Добавляем в избранное
           await addToFavorites(track._id);
-          setIsFavorite(true);
+          dispatch(addToFavoritesState(track));
         }
       } else if (pathname === '/MyTracks') {
+        // На странице MyTracks всегда удаляем
         await removeFromFavorites(track._id);
-        setIsFavorite(false);
-        // Используем router.refresh вместо полной перезагрузки
+        dispatch(removeFromFavoritesState(track._id));
+        // Используем router.refresh для обновления страницы
         router.refresh();
       }
     } catch (error: any) {
