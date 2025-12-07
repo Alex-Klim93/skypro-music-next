@@ -2,9 +2,9 @@ import { TrackType } from '@/app/sharedTypes/sharedTypes';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 type initialStateType = {
-  allTracks: TrackType[]; // ВСЕ треки с сервера
-  favoriteTracks: TrackType[]; // Только избранные треки
-  favoriteTrackIds: number[]; // Только ID избранных треков для быстрой проверки
+  allTracks: TrackType[];
+  favoriteTracks: TrackType[];
+  favoriteTrackIds: number[];
   currentTrack: null | TrackType;
   isPlay: boolean;
   currentTime: number;
@@ -19,9 +19,9 @@ type initialStateType = {
 };
 
 const initialState: initialStateType = {
-  allTracks: [], // Для главной и подборок
-  favoriteTracks: [], // Для страницы "Мой плейлист"
-  favoriteTrackIds: [], // Для быстрой проверки
+  allTracks: [],
+  favoriteTracks: [],
+  favoriteTrackIds: [],
   currentTrack: null,
   isPlay: false,
   currentTime: 0,
@@ -39,27 +39,33 @@ const trackSlice = createSlice({
   name: 'tracks',
   initialState,
   reducers: {
-    // Для главной страницы и подборок
     setAllTracks: (state, action: PayloadAction<TrackType[]>) => {
       state.allTracks = action.payload;
     },
 
-    // Для страницы "Мой плейлист"
     setFavoriteTracks: (state, action: PayloadAction<TrackType[]>) => {
       state.favoriteTracks = action.payload;
       state.favoriteTrackIds = action.payload.map((track) => track._id);
     },
 
-    // Добавить трек в избранное
     addToFavoritesState: (state, action: PayloadAction<TrackType>) => {
       const track = action.payload;
       if (!state.favoriteTrackIds.includes(track._id)) {
         state.favoriteTracks.push(track);
         state.favoriteTrackIds.push(track._id);
+        // Увеличиваем счетчик лайков у трека
+        const trackIndex = state.allTracks.findIndex(
+          (t) => t._id === track._id,
+        );
+        if (trackIndex !== -1) {
+          state.allTracks[trackIndex] = {
+            ...state.allTracks[trackIndex],
+            likes_count: (state.allTracks[trackIndex].likes_count || 0) + 1,
+          };
+        }
       }
     },
 
-    // Удалить трек из избранного
     removeFromFavoritesState: (state, action: PayloadAction<number>) => {
       const trackId = action.payload;
       state.favoriteTracks = state.favoriteTracks.filter(
@@ -68,6 +74,31 @@ const trackSlice = createSlice({
       state.favoriteTrackIds = state.favoriteTrackIds.filter(
         (id) => id !== trackId,
       );
+      // Уменьшаем счетчик лайков у трека
+      const trackIndex = state.allTracks.findIndex((t) => t._id === trackId);
+      if (trackIndex !== -1) {
+        state.allTracks[trackIndex] = {
+          ...state.allTracks[trackIndex],
+          likes_count: Math.max(
+            (state.allTracks[trackIndex].likes_count || 0) - 1,
+            0,
+          ),
+        };
+      }
+    },
+
+    updateTrackLikes: (
+      state,
+      action: PayloadAction<{ trackId: number; likesCount: number }>,
+    ) => {
+      const { trackId, likesCount } = action.payload;
+      const trackIndex = state.allTracks.findIndex((t) => t._id === trackId);
+      if (trackIndex !== -1) {
+        state.allTracks[trackIndex] = {
+          ...state.allTracks[trackIndex],
+          likes_count: likesCount,
+        };
+      }
     },
 
     setCurrentTrack: (
@@ -179,6 +210,7 @@ export const {
   setFavoriteTracks,
   addToFavoritesState,
   removeFromFavoritesState,
+  updateTrackLikes,
   setCurrentTrack,
   setIsPlay,
   setCurrentTime,
