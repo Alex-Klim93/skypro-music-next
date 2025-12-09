@@ -29,10 +29,10 @@ export default function SelectionPage() {
 
   useEffect(() => {
     const user = localStorage.getItem('user');
-    if (!user) {
-      router.push('/Signin');
-      return;
-    }
+    // if (!user) {
+    //   router.push('/Signin');
+    //   return;
+    // }
 
     loadSelection();
   }, [router, id]);
@@ -40,25 +40,17 @@ export default function SelectionPage() {
   const loadSelection = async () => {
     try {
       setLoading(true);
-      console.log('Начинаем загрузку подборки ID:', id);
 
       // ВСЕГДА загружаем все треки если их нет или обновляем
       let currentAllTracks = allTracks;
       if (currentAllTracks.length === 0) {
-        console.log('Треков в Redux нет, загружаем...');
         const tracksData = await getAllTracks();
-        console.log('Загружено треков:', tracksData.length);
         dispatch(setAllTracks(tracksData));
         currentAllTracks = tracksData;
-      } else {
-        console.log('Треки уже в Redux:', currentAllTracks.length);
       }
 
       // Получаем подборку
-      console.log('Запрашиваем подборку с API...');
       const selection = await getSelectionById(id);
-      console.log('Получена подборка:', selection);
-      console.log('Items подборки:', selection.items);
 
       // Устанавливаем название
       setSelectionName(selection.name || altName);
@@ -69,29 +61,23 @@ export default function SelectionPage() {
 
         // Если items содержат ID (числа)
         if (typeof firstItem === 'number') {
-          console.log('Items содержат ID треков:', selection.items);
           // Фильтруем треки по ID
           const tracksIds = selection.items;
           const filteredTracks = currentAllTracks.filter((track) =>
             tracksIds.includes(track._id),
           );
-          console.log('Отфильтровано треков:', filteredTracks.length);
           setTracks(filteredTracks);
         }
         // Если items содержат объекты треков
         else if (firstItem && typeof firstItem === 'object' && firstItem._id) {
-          console.log('Items содержат объекты треков');
           setTracks(selection.items as TrackType[]);
         } else {
-          console.log('Неизвестный формат items');
           setTracks([]);
         }
       } else {
-        console.log('Нет items или это не массив');
         setTracks([]);
       }
     } catch (err: any) {
-      console.error('Ошибка загрузки подборки:', err);
       setTracks([]);
     } finally {
       setLoading(false);

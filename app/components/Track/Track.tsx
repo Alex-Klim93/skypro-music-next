@@ -46,19 +46,43 @@ function TrackComponent({ track, playlist, index }: trackTypeProp) {
   const isCurrentTrack = currentTrack?._id === track._id;
 
   const onClickTrack = useCallback(() => {
-    dispatch(setCurrentTrack({ track, playlist, index }));
-    dispatch(setIsPlay(true));
-  }, [dispatch, track, playlist, index]);
+    if (isCurrentTrack) {
+      // Если кликаем на текущий трек, переключаем воспроизведение
+      dispatch(setIsPlay(!isPlay));
+    } else {
+      // Если кликаем на другой трек, устанавливаем его как текущий и включаем воспроизведение
+      dispatch(setCurrentTrack({ track, playlist, index }));
+      dispatch(setIsPlay(true));
+    }
+  }, [dispatch, track, playlist, index, isCurrentTrack, isPlay]);
+
+  const checkAuth = useCallback(() => {
+    const storedAccessToken = localStorage.getItem('access_token');
+    const storedUser = localStorage.getItem('user');
+
+    if (!storedAccessToken || !storedUser) {
+      alert('Для добавления в избранное необходимо авторизоваться');
+      return false;
+    }
+    return true;
+  }, []);
 
   const handleFavoriteClick = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation();
       e.preventDefault();
 
-      if (!refreshToken) {
+      // Проверяем авторизацию
+      if (!checkAuth()) {
+        // router.push('/');
+        return;
+      }
+
+      const storedRefreshToken = localStorage.getItem('refresh_token');
+      if (!storedRefreshToken) {
         setError('Необходимо авторизоваться');
         setTimeout(() => setError(null), 3000);
-        router.push('/Signin');
+        // router.push('/');
         return;
       }
 
@@ -71,7 +95,7 @@ function TrackComponent({ track, playlist, index }: trackTypeProp) {
           // Удаляем из избранного
           await removeFromFavorites(
             track._id,
-            refreshToken,
+            storedRefreshToken,
             dispatch,
             setAccessToken,
           );
@@ -86,7 +110,7 @@ function TrackComponent({ track, playlist, index }: trackTypeProp) {
           // Добавляем в избранное
           await addToFavorites(
             track._id,
-            refreshToken,
+            storedRefreshToken,
             dispatch,
             setAccessToken,
           );
@@ -105,7 +129,8 @@ function TrackComponent({ track, playlist, index }: trackTypeProp) {
         );
 
         if (error.response?.status === 401) {
-          router.push('/Signin');
+          alert('Сессия истекла. Пожалуйста, войдите снова.');
+          router.push('/Siginin');
         }
       } finally {
         setLoading(false);
@@ -113,11 +138,12 @@ function TrackComponent({ track, playlist, index }: trackTypeProp) {
         setTimeout(() => setError(null), 3000);
       }
     },
-    [isFavorite, track, refreshToken, dispatch, router],
+    [isFavorite, track, router, checkAuth, dispatch],
   );
 
   const renderFavoriteButton = () => {
     if (pathname === '/MyTracks') {
+      // На странице "Мой плейлист" показываем кнопку удаления
       return (
         <button
           onClick={handleFavoriteClick}
@@ -135,6 +161,7 @@ function TrackComponent({ track, playlist, index }: trackTypeProp) {
       );
     }
 
+    // На остальных страницах показываем обычную кнопку лайка
     return (
       <button
         onClick={handleFavoriteClick}

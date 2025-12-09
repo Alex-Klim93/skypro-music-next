@@ -20,71 +20,56 @@ export default function Home() {
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
 
-  // Оптимизация с useCallback для предотвращения пересоздания функции
+  // Загружаем все треки (для всех пользователей)
+  const loadAllTracks = useCallback(async () => {
+    try {
+      if (allTracks.length === 0) {
+        // Загружаем все треки без авторизации
+        const tracksData = await getTracks();
+        dispatch(setAllTracks(tracksData));
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки треков:', error);
+    }
+  }, [dispatch, allTracks.length]);
+
+  // Проверяем авторизацию и загружаем избранное только если пользователь авторизован
   const checkAuthAndLoadData = useCallback(async () => {
     try {
       // Проверяем наличие пользователя в localStorage
       const storedUser = localStorage.getItem('user');
       const storedAccessToken = localStorage.getItem('access_token');
-      const storedRefreshToken = localStorage.getItem('refresh_token');
 
-      // Если пользователь на странице избранного и нет токенов, редиректим на главную
-      if (
-        pathname?.includes('favorites') &&
-        (!storedUser || !storedAccessToken)
-      ) {
-        console.log(
-          'Пользователь не авторизован на странице избранного, редирект на главную',
-        );
-        router.push('/');
-        return;
-      }
+      // Загружаем все треки (для всех пользователей)
+      await loadAllTracks();
 
-      if (!storedUser || !storedAccessToken) {
-        console.log('Пользователь не авторизован, редирект на Signin');
-        router.push('/Signin');
-        return;
-      }
+      // Если пользователь авторизован, загружаем его избранные треки
+      if (storedUser && storedAccessToken) {
+        // Устанавливаем пользователя и токен в Redux если их еще нет
+        if (!user) {
+          dispatch(setUser(JSON.parse(storedUser)));
+          dispatch(setAccessToken(storedAccessToken));
+        }
 
-      // Устанавливаем пользователя и токен в Redux если их еще нет
-      if (!user) {
-        dispatch(setUser(JSON.parse(storedUser)));
-        dispatch(setAccessToken(storedAccessToken));
-      }
-
-      // Загружаем данные только если их нет в Redux
-      if (allTracks.length === 0) {
-        await loadAllData(storedAccessToken);
+        // Загружаем избранные треки
+        try {
+          const favoriteTracksData = await getFavoriteTracks(storedAccessToken);
+          dispatch(setFavoriteTracks(favoriteTracksData));
+        } catch (error) {
+          console.error('Ошибка загрузки избранных треков:', error);
+          // При ошибке 401 очищаем сессию
+          if (error instanceof Error && error.message.includes('401')) {
+            dispatch(logout());
+            // Продолжаем работу как неавторизованный пользователь
+          }
+        }
       }
     } catch (error) {
       console.error('Ошибка загрузки данных:', error);
-      // При ошибке аутентификации очищаем сессию
-      if (error instanceof Error && error.message.includes('401')) {
-        dispatch(logout());
-        router.push('/Signin');
-      }
     } finally {
       setLoading(false);
     }
-  }, [dispatch, user, allTracks.length, router, pathname]);
-
-  // Оптимизация с useCallback
-  const loadAllData = useCallback(
-    async (accessToken: string) => {
-      try {
-        // Загружаем все треки
-        const tracksData = await getTracks(accessToken);
-        dispatch(setAllTracks(tracksData));
-
-        // Загружаем избранные треки
-        const favoriteTracksData = await getFavoriteTracks(accessToken);
-        dispatch(setFavoriteTracks(favoriteTracksData));
-      } catch (error) {
-        console.error('Ошибка загрузки данных:', error);
-      }
-    },
-    [dispatch],
-  );
+  }, [dispatch, user, router, pathname, loadAllTracks]);
 
   useEffect(() => {
     checkAuthAndLoadData();

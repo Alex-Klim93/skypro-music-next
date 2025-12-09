@@ -46,7 +46,6 @@ describe('Filter Component', () => {
 
   test('рендерится с корректными элементами при isOpen=true', () => {
     if (mockButtonRef.current) {
-      // Симулируем реальное положение кнопки
       mockButtonRef.current.getBoundingClientRect = jest.fn(() => ({
         bottom: 100,
         left: 50,
@@ -134,7 +133,6 @@ describe('Filter Component', () => {
       </div>,
     );
 
-    // Кликаем вне фильтра
     fireEvent.mouseDown(screen.getByTestId('outside-button'));
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
@@ -165,7 +163,6 @@ describe('Filter Component', () => {
       />,
     );
 
-    // Кликаем на элемент фильтра
     fireEvent.mouseDown(screen.getByText('Item 1'));
 
     expect(mockOnClose).not.toHaveBeenCalled();
@@ -203,7 +200,6 @@ describe('Filter Component', () => {
       </div>,
     );
 
-    // Кликаем на кнопку фильтра
     fireEvent.mouseDown(screen.getByText('Filter Button'));
 
     expect(mockOnClose).not.toHaveBeenCalled();

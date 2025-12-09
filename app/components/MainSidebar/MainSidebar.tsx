@@ -34,7 +34,7 @@ export default function MainSidebar() {
     localStorage.removeItem('user');
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-    window.location.href = '/Signin';
+    window.location.href = '/';
   };
 
   return (
@@ -51,7 +51,7 @@ export default function MainSidebar() {
         )}
         <Link
           className={styles.sidebar__icon}
-          href={user ? '#' : '/Signin'}
+          href={user ? '#' : ''}
           onClick={user ? handleLogout : undefined}
         >
           <svg>

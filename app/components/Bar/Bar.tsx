@@ -22,7 +22,6 @@ import {
   addToFavorites,
   removeFromFavorites,
 } from '@/app/services/traks/trackApi';
-import { useRouter } from 'next/navigation';
 
 export default function Bar() {
   const {
@@ -35,15 +34,12 @@ export default function Bar() {
     isShuffle,
     favoriteTrackIds,
   } = useAppSelector((state) => state.tracks);
+  const user = useAppSelector((state) => state.auth.user); // Добавил получение user из auth
   const dispatch = useAppDispatch();
-  const router = useRouter();
 
   // Управление audio элементом через useRef
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
-
-  // Состояние для избранного
-  const [loading, setLoading] = useState(false);
 
   // Проверяем, находится ли текущий трек в избранном
   const isFavorite = currentTrack
@@ -161,7 +157,11 @@ export default function Bar() {
 
     if (!currentTrack) return;
 
-    setLoading(true);
+    // Проверяем авторизацию перед отправкой запроса
+    if (!user) {
+      alert('Чтобы добавить трек в избранное, пожалуйста, авторизуйтесь.');
+      return;
+    }
 
     try {
       if (isFavorite) {
@@ -177,14 +177,19 @@ export default function Bar() {
       console.error('Ошибка обновления избранного:', error);
 
       if (error.response?.status === 401) {
-        // Если не авторизован, очищаем локальное хранилище и перенаправляем на страницу входа
-        localStorage.removeItem('user');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        router.push('/Signin');
+        // Если токен истек или недействителен
+        alert('Ваша сессия истекла. Пожалуйста, авторизуйтесь снова.');
+        // Можно очистить localStorage
+        // localStorage.removeItem('user');
+        // localStorage.removeItem('access_token');
+        // localStorage.removeItem('refresh_token');
+      } else if (error.response?.status === 400) {
+        alert('Некорректный запрос. Пожалуйста, попробуйте позже.');
+      } else if (error.response?.status === 500) {
+        alert('Серверная ошибка. Пожалуйста, попробуйте позже.');
+      } else {
+        alert('Произошла ошибка. Пожалуйста, попробуйте позже.');
       }
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -72,7 +72,6 @@ export type SelectionType = {
 
 export const getAllSelections = (): Promise<SelectionType[]> => {
   return api.get('/catalog/selection/all').then((res) => {
-    console.log('API Response для подборок:', res.data);
 
     if (res.data && Array.isArray(res.data)) {
       return res.data;
@@ -85,26 +84,18 @@ export const getAllSelections = (): Promise<SelectionType[]> => {
     ) {
       return res.data.results;
     }
-
-    console.log('Некорректный формат данных для подборок:', res.data);
     return [];
   });
 };
 
 export const getSelectionById = (id: number): Promise<SelectionType> => {
   return api.get(`/catalog/selection/${id}/`).then((res) => {
-    console.log('API Response для подборки ID', id, ':', res.data);
 
     // Проверяем структуру
     const selection = res.data?.data || res.data;
 
     if (selection) {
-      console.log('Items в подборке:', selection.items);
-      console.log('Тип items:', typeof selection.items);
-      console.log('Это массив?', Array.isArray(selection.items));
       if (Array.isArray(selection.items) && selection.items.length > 0) {
-        console.log('Первый элемент items:', selection.items[0]);
-        console.log('Тип первого элемента:', typeof selection.items[0]);
       }
       return selection;
     }

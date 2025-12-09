@@ -31,13 +31,10 @@ describe('Search Component', () => {
       'Поиск',
     ) as HTMLInputElement;
 
-    // Начальное значение должно быть пустым
     expect(searchInput.value).toBe('');
 
-    // Вводим текст
     fireEvent.change(searchInput, { target: { value: 'test search' } });
 
-    // Проверяем, что значение обновилось
     expect(searchInput.value).toBe('test search');
   });
 
@@ -84,11 +81,8 @@ describe('Search Component', () => {
 
     expect(searchInput.value).toBe('сохраненный текст');
 
-    // Перерендерим компонент
     rerender(<Search />);
 
-    // В реальном компоненте состояние сбрасывается при перерендере,
-    // так как используется useState внутри компонента
     const newSearchInput = screen.getByPlaceholderText(
       'Поиск',
     ) as HTMLInputElement;

@@ -1,10 +1,9 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import Centerblock from '@/app/components/Centerblock/Centerblock';
 import { TrackType } from '@/app/sharedTypes/sharedTypes';
 import '@testing-library/jest-dom';
 
-// Мокируем дочерние компоненты
 jest.mock('@/app/components/Search/Search', () => {
   return function MockSearch() {
     return <div data-testid="mock-search">Search Component</div>;
@@ -112,11 +111,8 @@ describe('Centerblock Component - Filter Integration', () => {
   test('передает правильные уникальные значения для фильтров', () => {
     render(<Centerblock tracks={mockTracks} />);
 
-    // Проверяем, что компонент рендерится с треками
     expect(screen.getByText('Track: Track 1')).toBeInTheDocument();
 
-    // В реальном компоненте Filter мокирован, но мы можем проверить
-    // что он получает правильные данные через props
     const filterButtons = screen.getAllByRole('button');
     expect(filterButtons.length).toBeGreaterThan(0);
   });
@@ -124,14 +120,10 @@ describe('Centerblock Component - Filter Integration', () => {
   test('обрабатывает изменение активного фильтра', () => {
     const { container } = render(<Centerblock tracks={mockTracks} />);
 
-    // Находим кнопку фильтра по исполнителю
     const authorButton = screen.getByText('исполнителю');
 
-    // В реальном компоненте это изменило бы состояние activeFilter
-    // Но так как мы мокировали Filter, мы проверяем только наличие кнопки
     expect(authorButton).toBeInTheDocument();
 
-    // Проверяем CSS классы кнопок
     const filterButtons = container.querySelectorAll('.filter__button');
     expect(filterButtons.length).toBe(3);
   });

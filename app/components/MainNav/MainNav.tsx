@@ -36,15 +36,9 @@ export default function MainNav() {
       e.preventDefault();
       dispatch(logout());
       closeMenu();
-
-      // Редирект после выхода
-      if (pathname.includes('favorites') || pathname.includes('MyTracks')) {
-        router.push('/');
-      } else {
-        router.push('/Signin');
-      }
+      router.push('/');
     },
-    [dispatch, router, pathname, closeMenu],
+    [dispatch, router, closeMenu],
   );
 
   // Пока компонент не смонтирован, рендерим только логотип (для сервера)

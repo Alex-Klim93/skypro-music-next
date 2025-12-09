@@ -31,10 +31,10 @@ describe('Helper functions', () => {
     {
       _id: 3,
       name: 'Track 3',
-      author: 'Author 1', // Дублирующийся автор
+      author: 'Author 1',
       album: 'Album 3',
       duration_in_seconds: 195,
-      release_date: '2019-12-31', // Год 2019
+      release_date: '2019-12-31',
       genre: ['Rock', 'Metal'],
       likes_count: 15,
     },
@@ -44,7 +44,7 @@ describe('Helper functions', () => {
       author: 'Author 3',
       album: 'Album 4',
       duration_in_seconds: 125,
-      release_date: '2021-07-20', // Год 2021
+      release_date: '2021-07-20',
       genre: ['Jazz'],
       likes_count: 8,
     },
@@ -93,7 +93,7 @@ describe('Helper functions', () => {
         {
           ...mockTracks[0],
           _id: 5,
-          genre: ['Rock', 'Pop'], // Те же жанры
+          genre: ['Rock', 'Pop'],
         },
       ];
       const result = getUniqueGenreValues(tracksWithDuplicates);
@@ -127,7 +127,7 @@ describe('Helper functions', () => {
         {
           ...mockTracks[0],
           _id: 5,
-          release_date: '2021-08-01', // Год 2021 уже есть
+          release_date: '2021-08-01',
         },
       ];
       const result = getUniqueYears(tracksWithSameYear);
@@ -170,7 +170,7 @@ describe('Helper functions', () => {
     });
 
     test('форматирует большое время', () => {
-      expect(formatTime(3661)).toBe('61:01'); // 1 час, 1 минута, 1 секунда
+      expect(formatTime(3661)).toBe('61:01');
     });
 
     test('обрабатывает отрицательное время', () => {
