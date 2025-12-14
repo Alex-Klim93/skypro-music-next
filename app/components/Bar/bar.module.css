@@ -216,6 +216,11 @@
   padding: 5px;
 }
 
+.trackPlay__likeDislike {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
 .trackPlay__likeSvg {
   width: 14px;
   height: 12px;
@@ -338,6 +343,7 @@
 
 /* Стили для времени трека */
 .trackPlay__time {
+  width: 80px;
   display: flex;
   align-items: center;
   margin: 0 20px;
@@ -386,4 +392,3 @@
   fill: #4a90e2;
   stroke: #4a90e2;
 }
-

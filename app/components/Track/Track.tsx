@@ -180,10 +180,10 @@ function TrackComponent({ track, playlist, index }: trackTypeProp) {
         >
           <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
         </svg>
-        <span className={styles.pulseEffect}></span>
-        {track.likes_count > 0 && (
+        {/* <span className={styles.pulseEffect}></span> */}
+        {/* {track.likes_count > 0 && (
           <span className={styles.likesCount}>{track.likes_count}</span>
-        )}
+        )} */}
       </button>
     );
   };

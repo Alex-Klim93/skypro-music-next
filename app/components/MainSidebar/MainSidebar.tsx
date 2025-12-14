@@ -4,6 +4,7 @@ import Link from 'next/link';
 import SidebarBlock from '../SidebarBlock/SidebarBlock';
 import styles from './MainSidebar.module.css';
 import { useEffect, useState } from 'react';
+import { logoutUser } from '@/app/services/auth/authApi';
 
 interface UserData {
   email: string;
@@ -30,10 +31,20 @@ export default function MainSidebar() {
     setIsLoading(false);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+
+    try {
+      await logoutUser(refreshToken);
+    } catch (error) {
+      console.log('Ошибка при выходе:', error);
+    }
+
     localStorage.removeItem('user');
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+
+    setUser(null);
     window.location.href = '/';
   };
 
@@ -51,7 +62,7 @@ export default function MainSidebar() {
         )}
         <Link
           className={styles.sidebar__icon}
-          href={user ? '#' : ''}
+          href={user ? '#' : '/Signin'}
           onClick={user ? handleLogout : undefined}
         >
           <svg>
