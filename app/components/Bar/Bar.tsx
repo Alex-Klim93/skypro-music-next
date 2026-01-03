@@ -14,8 +14,15 @@ import {
   setIsShuffle,
   nextTrack,
   prevTrack,
+  addToFavoritesState,
+  removeFromFavoritesState,
 } from '@/app/store/features/trackSlice';
 import { formatTime } from '@/app/utils/helper';
+import {
+  addToFavorites,
+  removeFromFavorites,
+} from '@/app/services/traks/trackApi';
+import { useRouter } from 'next/navigation';
 
 export default function Bar() {
   const {
@@ -26,12 +33,22 @@ export default function Bar() {
     volume,
     isLoop,
     isShuffle,
+    favoriteTrackIds,
   } = useAppSelector((state) => state.tracks);
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   // Управление audio элементом через useRef
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
+
+  // Состояние для избранного
+  const [loading, setLoading] = useState(false);
+
+  // Проверяем, находится ли текущий трек в избранном
+  const isFavorite = currentTrack
+    ? favoriteTrackIds.includes(currentTrack._id)
+    : false;
 
   // Обработка событий audio элемента через useEffect
   useEffect(() => {
@@ -136,6 +153,39 @@ export default function Bar() {
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     dispatch(setVolume(newVolume));
+  };
+
+  // Обработчик клика по сердечку (избранное)
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!currentTrack) return;
+
+    setLoading(true);
+
+    try {
+      if (isFavorite) {
+        // Удаляем из избранного
+        await removeFromFavorites(currentTrack._id);
+        dispatch(removeFromFavoritesState(currentTrack._id));
+      } else {
+        // Добавляем в избранное
+        await addToFavorites(currentTrack._id);
+        dispatch(addToFavoritesState(currentTrack));
+      }
+    } catch (error: any) {
+      console.error('Ошибка обновления избранного:', error);
+
+      if (error.response?.status === 401) {
+        // Если не авторизован, очищаем локальное хранилище и перенаправляем на страницу входа
+        localStorage.removeItem('user');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        router.push('/Signin');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Переключение воспроизведения
@@ -269,20 +319,21 @@ export default function Bar() {
 
               <div className={styles.trackPlay__likeDislike}>
                 <div
-                  className={classnames(styles.trackPlay__like, styles.btnIcon)}
+                  className={classnames(
+                    styles.trackPlay__like,
+                    styles.btnIcon,
+                    {
+                      [styles.favoriteActive]: isFavorite,
+                      [styles.active]: isFavorite,
+                    },
+                  )}
+                  onClick={handleFavoriteClick}
+                  title={
+                    isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'
+                  }
                 >
                   <svg className={styles.trackPlay__likeSvg}>
                     <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
-                  </svg>
-                </div>
-                <div
-                  className={classnames(
-                    styles.trackPlay__dislike,
-                    styles.btnIcon,
-                  )}
-                >
-                  <svg className={styles.trackPlay__dislikeSvg}>
-                    <use xlinkHref="/img/icon/sprite.svg#icon-dislike"></use>
                   </svg>
                 </div>
               </div>

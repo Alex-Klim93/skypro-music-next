@@ -18,7 +18,6 @@ export default function SelectionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
-
   const allTracks = useAppSelector((state) => state.tracks.allTracks);
 
   const id = Number(params.id);
@@ -41,25 +40,59 @@ export default function SelectionPage() {
   const loadSelection = async () => {
     try {
       setLoading(true);
+      console.log('Начинаем загрузку подборки ID:', id);
 
-      // Если треков нет в Redux, загружаем их
-      if (allTracks.length === 0) {
+      // ВСЕГДА загружаем все треки если их нет или обновляем
+      let currentAllTracks = allTracks;
+      if (currentAllTracks.length === 0) {
+        console.log('Треков в Redux нет, загружаем...');
         const tracksData = await getAllTracks();
+        console.log('Загружено треков:', tracksData.length);
         dispatch(setAllTracks(tracksData));
+        currentAllTracks = tracksData;
+      } else {
+        console.log('Треки уже в Redux:', currentAllTracks.length);
       }
 
-      // Получаем данные подборки
+      // Получаем подборку
+      console.log('Запрашиваем подборку с API...');
       const selection = await getSelectionById(id);
+      console.log('Получена подборка:', selection);
+      console.log('Items подборки:', selection.items);
+
+      // Устанавливаем название
       setSelectionName(selection.name || altName);
 
-      // Фильтруем треки по ID из items
-      const selectionTracks = allTracks.filter((track) =>
-        selection.items?.includes(track._id),
-      );
+      // Обрабатываем items
+      if (selection.items && Array.isArray(selection.items)) {
+        const firstItem = selection.items[0];
 
-      setTracks(selectionTracks);
-    } catch (err) {
+        // Если items содержат ID (числа)
+        if (typeof firstItem === 'number') {
+          console.log('Items содержат ID треков:', selection.items);
+          // Фильтруем треки по ID
+          const tracksIds = selection.items;
+          const filteredTracks = currentAllTracks.filter((track) =>
+            tracksIds.includes(track._id),
+          );
+          console.log('Отфильтровано треков:', filteredTracks.length);
+          setTracks(filteredTracks);
+        }
+        // Если items содержат объекты треков
+        else if (firstItem && typeof firstItem === 'object' && firstItem._id) {
+          console.log('Items содержат объекты треков');
+          setTracks(selection.items as TrackType[]);
+        } else {
+          console.log('Неизвестный формат items');
+          setTracks([]);
+        }
+      } else {
+        console.log('Нет items или это не массив');
+        setTracks([]);
+      }
+    } catch (err: any) {
       console.error('Ошибка загрузки подборки:', err);
+      setTracks([]);
     } finally {
       setLoading(false);
     }
@@ -72,7 +105,7 @@ export default function SelectionPage() {
           <main className={styles.main}>
             <MainNav />
             <div style={{ padding: '20px', textAlign: 'center' }}>
-              <h2>Загрузка...</h2>
+              <h2 style={{ color: 'white' }}>Загрузка подборки...</h2>
             </div>
             <MainSidebar />
           </main>

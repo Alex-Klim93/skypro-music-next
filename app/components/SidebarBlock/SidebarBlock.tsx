@@ -1,3 +1,4 @@
+// SidebarBlock.tsx
 'use client';
 
 import styles from './SidebarBlock.module.css';
@@ -11,7 +12,7 @@ export default function SidebarBlock() {
         <div className={styles.sidebar__item}>
           <Link
             className={styles.sidebar__link}
-            href="/selection/1?name=Плейлист дня"
+            href="/selection/2?name=Плейлист дня"
           >
             <Image
               className={styles.sidebar__img}
@@ -25,7 +26,7 @@ export default function SidebarBlock() {
         <div className={styles.sidebar__item}>
           <Link
             className={styles.sidebar__link}
-            href="/selection/2?name=Танцевальные хиты"
+            href="/selection/3?name=Танцевальные хиты"
           >
             <Image
               className={styles.sidebar__img}
@@ -39,7 +40,7 @@ export default function SidebarBlock() {
         <div className={styles.sidebar__item}>
           <Link
             className={styles.sidebar__link}
-            href="/selection/3?name=Инди-заряд"
+            href="/selection/4?name=Инди-заряд"
           >
             <Image
               className={styles.sidebar__img}

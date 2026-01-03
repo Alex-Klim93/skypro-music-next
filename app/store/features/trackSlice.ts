@@ -3,6 +3,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 type initialStateType = {
   allTracks: TrackType[];
+  favoriteTracks: TrackType[];
+  favoriteTrackIds: number[];
   currentTrack: null | TrackType;
   isPlay: boolean;
   currentTime: number;
@@ -18,6 +20,8 @@ type initialStateType = {
 
 const initialState: initialStateType = {
   allTracks: [],
+  favoriteTracks: [],
+  favoriteTrackIds: [],
   currentTrack: null,
   isPlay: false,
   currentTime: 0,
@@ -37,6 +41,64 @@ const trackSlice = createSlice({
   reducers: {
     setAllTracks: (state, action: PayloadAction<TrackType[]>) => {
       state.allTracks = action.payload;
+    },
+
+    setFavoriteTracks: (state, action: PayloadAction<TrackType[]>) => {
+      state.favoriteTracks = action.payload;
+      state.favoriteTrackIds = action.payload.map((track) => track._id);
+    },
+
+    addToFavoritesState: (state, action: PayloadAction<TrackType>) => {
+      const track = action.payload;
+      if (!state.favoriteTrackIds.includes(track._id)) {
+        state.favoriteTracks.push(track);
+        state.favoriteTrackIds.push(track._id);
+        // Увеличиваем счетчик лайков у трека
+        const trackIndex = state.allTracks.findIndex(
+          (t) => t._id === track._id,
+        );
+        if (trackIndex !== -1) {
+          state.allTracks[trackIndex] = {
+            ...state.allTracks[trackIndex],
+            likes_count: (state.allTracks[trackIndex].likes_count || 0) + 1,
+          };
+        }
+      }
+    },
+
+    removeFromFavoritesState: (state, action: PayloadAction<number>) => {
+      const trackId = action.payload;
+      state.favoriteTracks = state.favoriteTracks.filter(
+        (track) => track._id !== trackId,
+      );
+      state.favoriteTrackIds = state.favoriteTrackIds.filter(
+        (id) => id !== trackId,
+      );
+      // Уменьшаем счетчик лайков у трека
+      const trackIndex = state.allTracks.findIndex((t) => t._id === trackId);
+      if (trackIndex !== -1) {
+        state.allTracks[trackIndex] = {
+          ...state.allTracks[trackIndex],
+          likes_count: Math.max(
+            (state.allTracks[trackIndex].likes_count || 0) - 1,
+            0,
+          ),
+        };
+      }
+    },
+
+    updateTrackLikes: (
+      state,
+      action: PayloadAction<{ trackId: number; likesCount: number }>,
+    ) => {
+      const { trackId, likesCount } = action.payload;
+      const trackIndex = state.allTracks.findIndex((t) => t._id === trackId);
+      if (trackIndex !== -1) {
+        state.allTracks[trackIndex] = {
+          ...state.allTracks[trackIndex],
+          likes_count: likesCount,
+        };
+      }
     },
 
     setCurrentTrack: (
@@ -66,34 +128,26 @@ const trackSlice = createSlice({
       }
       state.currentTime = 0;
     },
-
     setIsPlay: (state, action: PayloadAction<boolean>) => {
       state.isPlay = action.payload;
     },
-
     setCurrentTime: (state, action: PayloadAction<number>) => {
       state.currentTime = action.payload;
     },
-
     setDuration: (state, action: PayloadAction<number>) => {
       state.duration = action.payload;
     },
-
     setVolume: (state, action: PayloadAction<number>) => {
       state.volume = action.payload;
     },
-
     setIsLoop: (state, action: PayloadAction<boolean>) => {
       state.isLoop = action.payload;
     },
-
     setIsShuffle: (state, action: PayloadAction<boolean>) => {
       const newShuffleState = action.payload;
-
       if (newShuffleState && !state.isShuffle) {
         if (state.originalPlaylist.length > 0) {
           state.shuffledPlaylist = shuffleArray([...state.originalPlaylist]);
-
           const currentTrackId = state.currentTrack?._id;
           if (currentTrackId) {
             const newIndex = state.shuffledPlaylist.findIndex(
@@ -117,10 +171,8 @@ const trackSlice = createSlice({
           }
         }
       }
-
       state.isShuffle = newShuffleState;
     },
-
     nextTrack: (state) => {
       if (state.currentPlaylist.length > 0 && state.currentTrackIndex !== -1) {
         const nextIndex =
@@ -131,7 +183,6 @@ const trackSlice = createSlice({
         state.isPlay = true;
       }
     },
-
     prevTrack: (state) => {
       if (state.currentPlaylist.length > 0 && state.currentTrackIndex !== -1) {
         const prevIndex = state.currentTrackIndex - 1;
@@ -156,6 +207,10 @@ function shuffleArray<T>(array: T[]): T[] {
 
 export const {
   setAllTracks,
+  setFavoriteTracks,
+  addToFavoritesState,
+  removeFromFavoritesState,
+  updateTrackLikes,
   setCurrentTrack,
   setIsPlay,
   setCurrentTime,
@@ -166,5 +221,4 @@ export const {
   nextTrack,
   prevTrack,
 } = trackSlice.actions;
-
 export const trackSliceReducer = trackSlice.reducer;

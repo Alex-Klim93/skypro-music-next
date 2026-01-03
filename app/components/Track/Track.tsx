@@ -3,7 +3,14 @@
 import styles from './Track.module.css';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/app/store/store';
-import { setCurrentTrack, setIsPlay } from '@/app/store/features/trackSlice';
+import {
+  setCurrentTrack,
+  setIsPlay,
+  addToFavoritesState,
+  removeFromFavoritesState,
+  updateTrackLikes,
+} from '@/app/store/features/trackSlice';
+import { setAccessToken } from '@/app/services/auth/authSlice';
 import { TrackType } from '@/app/sharedTypes/sharedTypes';
 import classNames from 'classnames';
 import { formatTime } from '@/app/utils/helper';
@@ -11,81 +18,152 @@ import {
   addToFavorites,
   removeFromFavorites,
 } from '@/app/services/traks/trackApi';
-import { useState, useEffect } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 type trackTypeProp = {
   track: TrackType;
   playlist: TrackType[];
   index: number;
-  // Добавляем пропс для предварительной проверки избранного
-  isInitiallyFavorite?: boolean;
 };
 
-export default function Track({
-  track,
-  playlist,
-  index,
-  isInitiallyFavorite = false,
-}: trackTypeProp) {
+function TrackComponent({ track, playlist, index }: trackTypeProp) {
   const dispatch = useAppDispatch();
   const currentTrack = useAppSelector((state) => state.tracks.currentTrack);
+  const favoriteTrackIds = useAppSelector(
+    (state) => state.tracks.favoriteTrackIds,
+  );
+  const refreshToken = useAppSelector((state) => state.auth.refreshToken);
   const isPlay = useAppSelector((state) => state.tracks.isPlay);
-  const [loading, setLoading] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(isInitiallyFavorite);
   const pathname = usePathname();
   const router = useRouter();
 
-  // Убираем отдельный запрос для каждого трека - используем пропс
-  // useEffect только для синхронизации если изначальное состояние изменилось
-  useEffect(() => {
-    setIsFavorite(isInitiallyFavorite);
-  }, [isInitiallyFavorite]);
+  const [loading, setLoading] = useState(false);
+  const [likeAnimation, setLikeAnimation] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  const isFavorite = favoriteTrackIds.includes(track._id);
   const isCurrentTrack = currentTrack?._id === track._id;
 
-  const onClickTrack = () => {
+  const onClickTrack = useCallback(() => {
     dispatch(setCurrentTrack({ track, playlist, index }));
     dispatch(setIsPlay(true));
-  };
+  }, [dispatch, track, playlist, index]);
 
-  const handleFavoriteClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
+  const handleFavoriteClick = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
 
-    setLoading(true);
-
-    try {
-      if (pathname === '/') {
-        if (isFavorite) {
-          await removeFromFavorites(track._id);
-          setIsFavorite(false);
-        } else {
-          await addToFavorites(track._id);
-          setIsFavorite(true);
-        }
-      } else if (pathname === '/MyTracks') {
-        await removeFromFavorites(track._id);
-        setIsFavorite(false);
-        // Используем router.refresh вместо полной перезагрузки
-        router.refresh();
-      }
-    } catch (error: any) {
-      console.error('Ошибка обновления избранного:', error);
-
-      if (error.response?.status === 401) {
-        localStorage.removeItem('user');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+      if (!refreshToken) {
+        setError('Необходимо авторизоваться');
+        setTimeout(() => setError(null), 3000);
         router.push('/Signin');
+        return;
       }
-    } finally {
-      setLoading(false);
+
+      setLoading(true);
+      setError(null);
+      setLikeAnimation(true);
+
+      try {
+        if (isFavorite) {
+          // Удаляем из избранного
+          await removeFromFavorites(
+            track._id,
+            refreshToken,
+            dispatch,
+            setAccessToken,
+          );
+          dispatch(removeFromFavoritesState(track._id));
+          dispatch(
+            updateTrackLikes({
+              trackId: track._id,
+              likesCount: Math.max((track.likes_count || 0) - 1, 0),
+            }),
+          );
+        } else {
+          // Добавляем в избранное
+          await addToFavorites(
+            track._id,
+            refreshToken,
+            dispatch,
+            setAccessToken,
+          );
+          dispatch(addToFavoritesState(track));
+          dispatch(
+            updateTrackLikes({
+              trackId: track._id,
+              likesCount: (track.likes_count || 0) + 1,
+            }),
+          );
+        }
+      } catch (error: any) {
+        console.error('Ошибка обновления избранного:', error);
+        setError(
+          error.response?.data?.message || 'Ошибка при обновлении лайка',
+        );
+
+        if (error.response?.status === 401) {
+          router.push('/Signin');
+        }
+      } finally {
+        setLoading(false);
+        setTimeout(() => setLikeAnimation(false), 500);
+        setTimeout(() => setError(null), 3000);
+      }
+    },
+    [isFavorite, track, refreshToken, dispatch, router],
+  );
+
+  const renderFavoriteButton = () => {
+    if (pathname === '/MyTracks') {
+      return (
+        <button
+          onClick={handleFavoriteClick}
+          disabled={loading}
+          className={classNames(styles.removeButton, {
+            [styles.animate]: likeAnimation,
+          })}
+          title="Удалить из избранного"
+        >
+          <svg className={styles.track__timeSvg}>
+            <use xlinkHref="/img/icon/sprite.svg#icon-dislike"></use>
+          </svg>
+          <span className={styles.pulseEffect}></span>
+        </button>
+      );
     }
+
+    return (
+      <button
+        onClick={handleFavoriteClick}
+        disabled={loading}
+        className={classNames(styles.favoriteButton, {
+          [styles.favoriteActive]: isFavorite,
+          [styles.animate]: likeAnimation,
+          [styles.loading]: loading,
+        })}
+        title={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+      >
+        <svg
+          className={classNames(styles.track__timeSvg, {
+            [styles.favoriteIconActive]: isFavorite,
+          })}
+        >
+          <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
+        </svg>
+        <span className={styles.pulseEffect}></span>
+        {track.likes_count > 0 && (
+          <span className={styles.likesCount}>{track.likes_count}</span>
+        )}
+      </button>
+    );
   };
 
   return (
     <div className={styles.playlist__item} onClick={onClickTrack}>
+      {error && <div className={styles.errorToast}>{error}</div>}
       <div className={styles.playlist__track}>
         <div className={styles.track__title}>
           <div
@@ -118,41 +196,7 @@ export default function Track({
             {track.album}
           </Link>
         </div>
-        <div className={styles.track__time}>
-          {pathname === '/' && (
-            <button
-              onClick={handleFavoriteClick}
-              disabled={loading}
-              className={classNames(styles.favoriteButton, {
-                [styles.favoriteActive]: isFavorite,
-              })}
-              title={
-                isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'
-              }
-            >
-              <svg
-                className={classNames(styles.track__timeSvg, {
-                  [styles.favoriteIconActive]: isFavorite,
-                })}
-              >
-                <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
-              </svg>
-            </button>
-          )}
-
-          {pathname === '/MyTracks' && (
-            <button
-              onClick={handleFavoriteClick}
-              disabled={loading}
-              className={styles.removeButton}
-              title="Удалить из избранного"
-            >
-              <svg className={styles.track__timeSvg}>
-                <use xlinkHref="/img/icon/sprite.svg#icon-dislike"></use>
-              </svg>
-            </button>
-          )}
-        </div>
+        <div className={styles.track__time}>{renderFavoriteButton()}</div>
         <span className={styles.track__timeText}>
           {formatTime(track.duration_in_seconds)}
         </span>
@@ -160,3 +204,5 @@ export default function Track({
     </div>
   );
 }
+
+export default memo(TrackComponent);

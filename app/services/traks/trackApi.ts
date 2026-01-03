@@ -1,103 +1,151 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { BASE_URL } from '../constants';
 import { TrackType } from '@/app/sharedTypes/sharedTypes';
 
-// Создаем экземпляр axios с интерсепторами
-const trackApi = axios.create({
+// Базовые функции API без интерсепторов
+const baseApi = axios.create({
   baseURL: BASE_URL,
 });
 
-// Интерцептор для добавления токена в заголовки
-trackApi.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+export const getAllTracks = (
+  accessToken: string = '',
+): Promise<TrackType[]> => {
+  const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+  return baseApi.get('/catalog/track/all/', { headers }).then((res) => {
+    if (res.data && Array.isArray(res.data.data)) {
+      return res.data.data;
     }
+    return [];
+  });
+};
+
+export const getFavoriteTracks = (
+  accessToken: string = '',
+): Promise<TrackType[]> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
   }
-  return config;
-});
 
-// Интерцептор для обработки 401 ошибки и обновления токена
-trackApi.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  return baseApi
+    .get('/catalog/track/favorite/all/', {
+      headers,
+    })
+    .then((res) => {
+      if (res.data && Array.isArray(res.data.data)) {
+        return res.data.data;
+      }
+      return [];
+    });
+};
 
-    // Если ошибка 401 и запрос еще не повторялся
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+export const addToFavoritesApi = (
+  accessToken: string,
+  id: number,
+): Promise<any> => {
+  return baseApi.post(
+    `/catalog/track/${id}/favorite/`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+};
 
+export const removeFromFavoritesApi = (
+  accessToken: string,
+  id: number,
+): Promise<any> => {
+  return baseApi.delete(`/catalog/track/${id}/favorite/`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+};
+
+// Функция refreshToken (экспортируем для использования в withReauth)
+export const refreshToken = async (refresh: string) => {
+  const response = await axios.post(
+    `${BASE_URL}/user/token/refresh/`,
+    { refresh },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+  return response.data;
+};
+
+// Утилита withReauth
+export const withReauth = async <T>(
+  apiFunction: (access: string) => Promise<T>,
+  refreshTokenValue: string,
+  dispatch: any,
+  setAccessToken: (token: string) => void,
+): Promise<T> => {
+  try {
+    const accessToken = localStorage.getItem('access_token') || '';
+    return await apiFunction(accessToken);
+  } catch (error) {
+    const axiosError = error as AxiosError;
+
+    if (axiosError.response?.status === 401) {
       try {
-        console.log('Пытаемся обновить токен...');
-        const refreshToken = localStorage.getItem('refresh_token');
-
-        if (!refreshToken) {
-          throw new Error('No refresh token');
+        const newTokens = await refreshToken(refreshTokenValue);
+        localStorage.setItem('access_token', newTokens.access);
+        if (newTokens.refresh) {
+          localStorage.setItem('refresh_token', newTokens.refresh);
         }
-
-        // Запрашиваем новый access токен
-        const response = await axios.post(
-          `${BASE_URL}/user/token/refresh/`,
-          { refresh: refreshToken },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          },
-        );
-
-        const newAccessToken = response.data.access;
-        console.log('Новый токен получен:', newAccessToken);
-
-        // Сохраняем новый токен
-        localStorage.setItem('access_token', newAccessToken);
-
-        // Обновляем заголовок и повторяем запрос
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return trackApi(originalRequest);
+        if (dispatch && setAccessToken) {
+          dispatch(setAccessToken(newTokens.access));
+        }
+        return await apiFunction(newTokens.access);
       } catch (refreshError) {
-        console.error('Ошибка обновления токена:', refreshError);
-
-        // Если refresh токен невалиден, очищаем localStorage и редиректим на вход
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('user');
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          window.location.href = '/Signin';
-        }
-        return Promise.reject(refreshError);
+        localStorage.removeItem('user');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/Signin';
+        throw refreshError;
       }
     }
-
-    return Promise.reject(error);
-  },
-);
-
-export const getAllTracks = (): Promise<TrackType[]> => {
-  return trackApi.get('/catalog/track/all/').then((res) => {
-    if (res.data && Array.isArray(res.data.data)) {
-      return res.data.data;
-    }
-    return [];
-  });
+    throw error;
+  }
 };
 
-export const getFavoriteTracks = (): Promise<TrackType[]> => {
-  return trackApi.get('/catalog/track/favorite/all/').then((res) => {
-    if (res.data && Array.isArray(res.data.data)) {
-      return res.data.data;
-    }
-    return [];
-  });
+// Функции с авто-обновлением токена
+export const addToFavorites = async (
+  id: number,
+  refreshTokenValue: string,
+  dispatch: any,
+  setAccessToken: any,
+): Promise<void> => {
+  return withReauth(
+    (accessToken) => addToFavoritesApi(accessToken, id),
+    refreshTokenValue,
+    dispatch,
+    setAccessToken,
+  );
 };
 
-export const addToFavorites = (id: number): Promise<void> => {
-  return trackApi.post(`/catalog/track/${id}/favorite/`, {});
-};
-
-export const removeFromFavorites = (id: number): Promise<void> => {
-  return trackApi.delete(`/catalog/track/${id}/favorite/`);
+export const removeFromFavorites = async (
+  id: number,
+  refreshTokenValue: string,
+  dispatch: any,
+  setAccessToken: any,
+): Promise<void> => {
+  return withReauth(
+    (accessToken) => removeFromFavoritesApi(accessToken, id),
+    refreshTokenValue,
+    dispatch,
+    setAccessToken,
+  );
 };
 
 // Для обратной совместимости
