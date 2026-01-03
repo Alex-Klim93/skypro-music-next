@@ -1,21 +1,35 @@
 'use client';
 
 import styles from './Centerblock.module.css';
-import { data } from '@/app/data';
 import classNames from 'classnames';
 import Search from '../Search/Search';
-import { getUniqueValuesByKey } from '@/app/utils/helper';
+import {
+  getUniqueValuesByKey,
+  getUniqueGenreValues,
+  getUniqueYears,
+} from '@/app/utils/helper';
 import { useState } from 'react';
 import Filter from '../Filter/Filter';
 import Track from '../Track/Track';
+import { TrackType } from '@/app/sharedTypes/sharedTypes';
 
-export default function Centerblock() {
+interface CenterblockProps {
+  tracks: TrackType[];
+  title?: string;
+  // Добавляем пропс для списка избранных ID
+  favoriteTrackIds?: number[];
+}
+
+export default function Centerblock({
+  tracks,
+  title = 'Треки',
+  favoriteTrackIds = [],
+}: CenterblockProps) {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  // Получаем уникальные значения из данных
-  const uniqueAuthors = getUniqueValuesByKey(data, 'author');
-  const uniqueGenres = getUniqueValuesByKey(data, 'genre');
-  const uniqueYears = getUniqueValuesByKey(data, 'release_date');
+  const uniqueAuthors = getUniqueValuesByKey(tracks, 'author');
+  const uniqueGenres = getUniqueGenreValues(tracks);
+  const uniqueYears = getUniqueYears(tracks);
 
   const handleFilterClick = (filterName: string) => {
     setActiveFilter(activeFilter === filterName ? null : filterName);
@@ -25,7 +39,6 @@ export default function Centerblock() {
     setActiveFilter(null);
   };
 
-  // Получаем данные для активного фильтра
   const getFilterItems = () => {
     switch (activeFilter) {
       case 'author':
@@ -42,7 +55,7 @@ export default function Centerblock() {
   return (
     <div className={styles.centerblock}>
       <Search />
-      <h2 className={styles.centerblock__h2}>Треки</h2>
+      <h2 className={styles.centerblock__h2}>{title}</h2>
 
       <div className={styles.centerblock__filter}>
         <div className={styles.filter__title}>Искать по:</div>
@@ -100,14 +113,22 @@ export default function Centerblock() {
           </div>
         </div>
         <div className={styles.content__playlist}>
-          {data.map((track, index) => (
-            <Track
-              key={track._id}
-              track={track}
-              playlist={data} // Передаем весь массив треков как плейлист
-              index={index} // Передаем индекс текущего трека
-            />
-          ))}
+          {tracks.length > 0 ? (
+            tracks.map((track, index) => (
+              <Track
+                key={track._id}
+                track={track}
+                playlist={tracks}
+                index={index}
+                // Передаем предварительно вычисленный статус избранного
+                isInitiallyFavorite={favoriteTrackIds.includes(track._id)}
+              />
+            ))
+          ) : (
+            <div className={styles.emptyTracks}>
+              <p className={styles.emptyTracks_message}>В этой подборке пока нет треков</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

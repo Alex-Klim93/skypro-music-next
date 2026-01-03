@@ -1,3 +1,5 @@
+'use client';
+
 import styles from './SidebarBlock.module.css';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -7,33 +9,42 @@ export default function SidebarBlock() {
     <div className={styles.sidebar__block}>
       <div className={styles.sidebar__list}>
         <div className={styles.sidebar__item}>
-          <Link className={styles.sidebar__link} href="#">
+          <Link
+            className={styles.sidebar__link}
+            href="/selection/1?name=Плейлист дня"
+          >
             <Image
               className={styles.sidebar__img}
               src="/img/playlist01.png"
-              alt="day's playlist"
+              alt="Плейлист дня"
               width={250}
               height={170}
             />
           </Link>
         </div>
         <div className={styles.sidebar__item}>
-          <Link className={styles.sidebar__link} href="#">
+          <Link
+            className={styles.sidebar__link}
+            href="/selection/2?name=Танцевальные хиты"
+          >
             <Image
               className={styles.sidebar__img}
               src="/img/playlist02.png"
-              alt="day's playlist"
+              alt="Танцевальные хиты"
               width={250}
               height={170}
             />
           </Link>
         </div>
         <div className={styles.sidebar__item}>
-          <Link className={styles.sidebar__link} href="#">
+          <Link
+            className={styles.sidebar__link}
+            href="/selection/3?name=Инди-заряд"
+          >
             <Image
               className={styles.sidebar__img}
               src="/img/playlist03.png"
-              alt="day's playlist"
+              alt="Инди-заряд"
               width={250}
               height={170}
             />

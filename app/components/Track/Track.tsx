@@ -7,23 +7,81 @@ import { setCurrentTrack, setIsPlay } from '@/app/store/features/trackSlice';
 import { TrackType } from '@/app/sharedTypes/sharedTypes';
 import classNames from 'classnames';
 import { formatTime } from '@/app/utils/helper';
+import {
+  addToFavorites,
+  removeFromFavorites,
+} from '@/app/services/traks/trackApi';
+import { useState, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 type trackTypeProp = {
   track: TrackType;
   playlist: TrackType[];
   index: number;
+  // Добавляем пропс для предварительной проверки избранного
+  isInitiallyFavorite?: boolean;
 };
 
-export default function Track({ track, playlist, index }: trackTypeProp) {
+export default function Track({
+  track,
+  playlist,
+  index,
+  isInitiallyFavorite = false,
+}: trackTypeProp) {
   const dispatch = useAppDispatch();
   const currentTrack = useAppSelector((state) => state.tracks.currentTrack);
   const isPlay = useAppSelector((state) => state.tracks.isPlay);
+  const [loading, setLoading] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(isInitiallyFavorite);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Убираем отдельный запрос для каждого трека - используем пропс
+  // useEffect только для синхронизации если изначальное состояние изменилось
+  useEffect(() => {
+    setIsFavorite(isInitiallyFavorite);
+  }, [isInitiallyFavorite]);
 
   const isCurrentTrack = currentTrack?._id === track._id;
 
   const onClickTrack = () => {
     dispatch(setCurrentTrack({ track, playlist, index }));
     dispatch(setIsPlay(true));
+  };
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    setLoading(true);
+
+    try {
+      if (pathname === '/') {
+        if (isFavorite) {
+          await removeFromFavorites(track._id);
+          setIsFavorite(false);
+        } else {
+          await addToFavorites(track._id);
+          setIsFavorite(true);
+        }
+      } else if (pathname === '/MyTracks') {
+        await removeFromFavorites(track._id);
+        setIsFavorite(false);
+        // Используем router.refresh вместо полной перезагрузки
+        router.refresh();
+      }
+    } catch (error: any) {
+      console.error('Ошибка обновления избранного:', error);
+
+      if (error.response?.status === 401) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        router.push('/Signin');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,30 +102,60 @@ export default function Track({ track, playlist, index }: trackTypeProp) {
             </svg>
           </div>
           <div>
-            <Link className={styles.track__titleLink} href="">
+            <Link className={styles.track__titleLink} href="#">
               {track.name}
               <span className={styles.track__titleSpan}></span>
             </Link>
           </div>
         </div>
         <div className={styles.track__author}>
-          <Link className={styles.track__authorLink} href="">
+          <Link className={styles.track__authorLink} href="#">
             {track.author}
           </Link>
         </div>
         <div className={styles.track__album}>
-          <Link className={styles.track__albumLink} href="">
+          <Link className={styles.track__albumLink} href="#">
             {track.album}
           </Link>
         </div>
         <div className={styles.track__time}>
-          <svg className={styles.track__timeSvg}>
-            <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
-          </svg>
-          <span className={styles.track__timeText}>
-            {formatTime(track.duration_in_seconds)}
-          </span>
+          {pathname === '/' && (
+            <button
+              onClick={handleFavoriteClick}
+              disabled={loading}
+              className={classNames(styles.favoriteButton, {
+                [styles.favoriteActive]: isFavorite,
+              })}
+              title={
+                isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'
+              }
+            >
+              <svg
+                className={classNames(styles.track__timeSvg, {
+                  [styles.favoriteIconActive]: isFavorite,
+                })}
+              >
+                <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
+              </svg>
+            </button>
+          )}
+
+          {pathname === '/MyTracks' && (
+            <button
+              onClick={handleFavoriteClick}
+              disabled={loading}
+              className={styles.removeButton}
+              title="Удалить из избранного"
+            >
+              <svg className={styles.track__timeSvg}>
+                <use xlinkHref="/img/icon/sprite.svg#icon-dislike"></use>
+              </svg>
+            </button>
+          )}
         </div>
+        <span className={styles.track__timeText}>
+          {formatTime(track.duration_in_seconds)}
+        </span>
       </div>
     </div>
   );

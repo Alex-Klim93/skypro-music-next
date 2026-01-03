@@ -2,6 +2,7 @@ import { TrackType } from '@/app/sharedTypes/sharedTypes';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 type initialStateType = {
+  allTracks: TrackType[];
   currentTrack: null | TrackType;
   isPlay: boolean;
   currentTime: number;
@@ -11,11 +12,12 @@ type initialStateType = {
   isShuffle: boolean;
   currentPlaylist: TrackType[];
   currentTrackIndex: number;
-  shuffledPlaylist: TrackType[]; // Для запоминания порядка при перемешивании
-  originalPlaylist: TrackType[]; // Оригинальный порядок
+  shuffledPlaylist: TrackType[];
+  originalPlaylist: TrackType[];
 };
 
 const initialState: initialStateType = {
+  allTracks: [],
   currentTrack: null,
   isPlay: false,
   currentTime: 0,
@@ -33,6 +35,10 @@ const trackSlice = createSlice({
   name: 'tracks',
   initialState,
   reducers: {
+    setAllTracks: (state, action: PayloadAction<TrackType[]>) => {
+      state.allTracks = action.payload;
+    },
+
     setCurrentTrack: (
       state,
       action: PayloadAction<{
@@ -46,10 +52,8 @@ const trackSlice = createSlice({
         state.currentPlaylist = action.payload.playlist;
         state.originalPlaylist = action.payload.playlist;
 
-        // Инициализируем shuffledPlaylist если shuffle активен
         if (state.isShuffle) {
           state.shuffledPlaylist = shuffleArray([...action.payload.playlist]);
-          // Находим индекс в shuffled плейлисте
           const shuffledIndex = state.shuffledPlaylist.findIndex(
             (track) => track._id === action.payload.track._id,
           );
@@ -87,11 +91,9 @@ const trackSlice = createSlice({
       const newShuffleState = action.payload;
 
       if (newShuffleState && !state.isShuffle) {
-        // Включаем shuffle - создаем перемешанный плейлист
         if (state.originalPlaylist.length > 0) {
           state.shuffledPlaylist = shuffleArray([...state.originalPlaylist]);
 
-          // Находим текущий трек в перемешанном плейлисте
           const currentTrackId = state.currentTrack?._id;
           if (currentTrackId) {
             const newIndex = state.shuffledPlaylist.findIndex(
@@ -104,7 +106,6 @@ const trackSlice = createSlice({
           }
         }
       } else if (!newShuffleState && state.isShuffle) {
-        // Выключаем shuffle - возвращаем оригинальный порядок
         const currentTrackId = state.currentTrack?._id;
         if (currentTrackId && state.originalPlaylist.length > 0) {
           const originalIndex = state.originalPlaylist.findIndex(
@@ -144,7 +145,6 @@ const trackSlice = createSlice({
   },
 });
 
-// Вспомогательная функция для перемешивания массива
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -155,6 +155,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export const {
+  setAllTracks,
   setCurrentTrack,
   setIsPlay,
   setCurrentTime,
@@ -165,4 +166,5 @@ export const {
   nextTrack,
   prevTrack,
 } = trackSlice.actions;
+
 export const trackSliceReducer = trackSlice.reducer;

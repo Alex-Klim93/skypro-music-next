@@ -1,0 +1,230 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 450px;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #999;
+  padding: 4px;
+}
+
+.closeButton:hover {
+  color: #333;
+}
+
+.title {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+}
+
+.input {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: #4a90e2;
+}
+
+.input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+/* Стили для загрузки логотипа */
+.logoUploadContainer {
+  margin-top: 8px;
+}
+
+.logoUploadArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 24px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #fafafa;
+  min-height: 120px;
+}
+
+.logoUploadArea:hover {
+  border-color: #4a90e2;
+  background-color: #f0f7ff;
+}
+
+.uploadContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.uploadIcon {
+  margin-bottom: 4px;
+}
+
+.uploadText {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.uploadHint {
+  font-size: 12px;
+  color: #999;
+}
+
+.logoInput {
+  display: none;
+}
+
+/* Стили для превью логотипа */
+.logoPreviewContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoPreview {
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #eee;
+}
+
+.removeLogoButton {
+  padding: 6px 16px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.removeLogoButton:hover:not(:disabled) {
+  background-color: #ff5252;
+}
+
+.removeLogoButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.logoHint {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.error {
+  color: #e74c3c;
+  font-size: 14px;
+  margin: 0;
+  padding: 8px;
+  background-color: #fef2f2;
+  border-radius: 4px;
+  border-left: 3px solid #e74c3c;
+}
+
+.buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.cancelButton,
+.createButton {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancelButton {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background-color: #e5e5e5;
+}
+
+.createButton {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.createButton:hover:not(:disabled) {
+  background-color: #3a7bc8;
+}
+
+.createButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.cancelButton:disabled,
+.createButton:disabled {
+  opacity: 0.5;
+}
