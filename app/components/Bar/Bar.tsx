@@ -23,6 +23,18 @@ import {
   removeFromFavorites,
 } from '@/app/services/traks/trackApi';
 
+// Интерфейсы для типизации ошибок
+interface ErrorResponse {
+  status: number;
+  data?: any;
+}
+
+interface ApiError extends Error {
+  response?: ErrorResponse;
+  request?: any;
+  config?: any;
+}
+
 export default function Bar() {
   const {
     currentTrack,
@@ -34,24 +46,20 @@ export default function Bar() {
     isShuffle,
     favoriteTrackIds,
   } = useAppSelector((state) => state.tracks);
-  const user = useAppSelector((state) => state.auth.user); // Добавил получение user из auth
+  const user = useAppSelector((state) => state.auth.user);
   const dispatch = useAppDispatch();
 
-  // Управление audio элементом через useRef
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
 
-  // Проверяем, находится ли текущий трек в избранном
   const isFavorite = currentTrack
     ? favoriteTrackIds.includes(currentTrack._id)
     : false;
 
-  // Обработка событий audio элемента через useEffect
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // Обработчики событий audio элемента
     const handleTimeUpdate = () => {
       dispatch(setCurrentTime(audio.currentTime));
     };
@@ -78,13 +86,11 @@ export default function Bar() {
       }
     };
 
-    // Подписываемся на события
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('canplay', handleCanPlay);
 
-    // Отписываемся при размонтировании
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
@@ -93,7 +99,6 @@ export default function Bar() {
     };
   }, [dispatch, isPlay, isLoop]);
 
-  // Управление воспроизведением/паузой через useEffect
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentTrack) return;
@@ -115,7 +120,6 @@ export default function Bar() {
     }
   }, [isPlay, currentTrack, dispatch]);
 
-  // Управление громкостью через useEffect
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -123,7 +127,6 @@ export default function Bar() {
     }
   }, [volume]);
 
-  // Управление зацикливанием через useEffect
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -131,7 +134,6 @@ export default function Bar() {
     }
   }, [isLoop]);
 
-  // Обработчик клика по прогресс-бару
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const progressBar = progressBarRef.current;
     const audio = audioRef.current;
@@ -145,19 +147,16 @@ export default function Bar() {
     }
   };
 
-  // Обработчик изменения громкости
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     dispatch(setVolume(newVolume));
   };
 
-  // Обработчик клика по сердечку (избранное)
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
     if (!currentTrack) return;
 
-    // Проверяем авторизацию перед отправкой запроса
     if (!user) {
       alert('Чтобы добавить трек в избранное, пожалуйста, авторизуйтесь.');
       return;
@@ -165,27 +164,23 @@ export default function Bar() {
 
     try {
       if (isFavorite) {
-        // Удаляем из избранного
         await removeFromFavorites(currentTrack._id);
         dispatch(removeFromFavoritesState(currentTrack._id));
       } else {
-        // Добавляем в избранное
         await addToFavorites(currentTrack._id);
         dispatch(addToFavoritesState(currentTrack));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Ошибка обновления избранного:', error);
 
-      if (error.response?.status === 401) {
-        // Если токен истек или недействителен
+      // Преобразуем ошибку к типу ApiError
+      const apiError = error as ApiError;
+
+      if (apiError.response?.status === 401) {
         alert('Ваша сессия истекла. Пожалуйста, авторизуйтесь снова.');
-        // Можно очистить localStorage
-        // localStorage.removeItem('user');
-        // localStorage.removeItem('access_token');
-        // localStorage.removeItem('refresh_token');
-      } else if (error.response?.status === 400) {
+      } else if (apiError.response?.status === 400) {
         alert('Некорректный запрос. Пожалуйста, попробуйте позже.');
-      } else if (error.response?.status === 500) {
+      } else if (apiError.response?.status === 500) {
         alert('Серверная ошибка. Пожалуйста, попробуйте позже.');
       } else {
         alert('Произошла ошибка. Пожалуйста, попробуйте позже.');
@@ -193,29 +188,24 @@ export default function Bar() {
     }
   };
 
-  // Переключение воспроизведения
   const togglePlay = () => {
     dispatch(setIsPlay(!isPlay));
   };
 
-  // Переключение повтора
   const toggleLoop = () => {
     dispatch(setIsLoop(!isLoop));
   };
 
-  // Переключение перемешивания
   const toggleShuffle = () => {
     dispatch(setIsShuffle(!isShuffle));
   };
 
-  // Рассчет прогресса в процентах
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   if (!currentTrack) return null;
 
   return (
     <div className={styles.bar}>
-      {/* Управление audio элементом через ref */}
       <audio ref={audioRef} src={currentTrack.track_file} preload="metadata" />
 
       <div className={styles.bar__content}>

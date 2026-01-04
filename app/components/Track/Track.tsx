@@ -27,6 +27,16 @@ type trackTypeProp = {
   index: number;
 };
 
+// Интерфейс для типизации ошибок API
+interface ApiError extends Error {
+  response?: {
+    status: number;
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 function TrackComponent({ track, playlist, index }: trackTypeProp) {
   const dispatch = useAppDispatch();
   const currentTrack = useAppSelector((state) => state.tracks.currentTrack);
@@ -122,13 +132,14 @@ function TrackComponent({ track, playlist, index }: trackTypeProp) {
             }),
           );
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Ошибка обновления избранного:', error);
+        const apiError = error as ApiError;
         setError(
-          error.response?.data?.message || 'Ошибка при обновлении лайка',
+          apiError.response?.data?.message || 'Ошибка при обновлении лайка',
         );
 
-        if (error.response?.status === 401) {
+        if (apiError.response?.status === 401) {
           alert('Сессия истекла. Пожалуйста, войдите снова.');
           router.push('/Siginin');
         }
@@ -180,10 +191,6 @@ function TrackComponent({ track, playlist, index }: trackTypeProp) {
         >
           <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
         </svg>
-        {/* <span className={styles.pulseEffect}></span> */}
-        {/* {track.likes_count > 0 && (
-          <span className={styles.likesCount}>{track.likes_count}</span>
-        )} */}
       </button>
     );
   };

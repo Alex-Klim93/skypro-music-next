@@ -13,6 +13,11 @@ import { useAppDispatch, useAppSelector } from '@/app/store/store';
 import { setAllTracks } from '@/app/store/features/trackSlice';
 import { getAllTracks } from '@/app/services/traks/trackApi';
 
+// Интерфейс для типизации ошибок
+interface ApiError extends Error {
+  message: string;
+}
+
 export default function SelectionPage() {
   const params = useParams();
   const router = useRouter();
@@ -28,20 +33,12 @@ export default function SelectionPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    // if (!user) {
-    //   router.push('/Signin');
-    //   return;
-    // }
-
     loadSelection();
   }, [router, id]);
 
   const loadSelection = async () => {
     try {
       setLoading(true);
-
-      // ВСЕГДА загружаем все треки если их нет или обновляем
       let currentAllTracks = allTracks;
       if (currentAllTracks.length === 0) {
         const tracksData = await getAllTracks();
@@ -49,27 +46,23 @@ export default function SelectionPage() {
         currentAllTracks = tracksData;
       }
 
-      // Получаем подборку
       const selection = await getSelectionById(id);
-
-      // Устанавливаем название
       setSelectionName(selection.name || altName);
 
-      // Обрабатываем items
       if (selection.items && Array.isArray(selection.items)) {
         const firstItem = selection.items[0];
 
-        // Если items содержат ID (числа)
         if (typeof firstItem === 'number') {
-          // Фильтруем треки по ID
           const tracksIds = selection.items;
           const filteredTracks = currentAllTracks.filter((track) =>
             tracksIds.includes(track._id),
           );
           setTracks(filteredTracks);
-        }
-        // Если items содержат объекты треков
-        else if (firstItem && typeof firstItem === 'object' && firstItem._id) {
+        } else if (
+          firstItem &&
+          typeof firstItem === 'object' &&
+          firstItem._id
+        ) {
           setTracks(selection.items as TrackType[]);
         } else {
           setTracks([]);
@@ -77,7 +70,9 @@ export default function SelectionPage() {
       } else {
         setTracks([]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      console.error('Ошибка загрузки подборки:', error);
       setTracks([]);
     } finally {
       setLoading(false);

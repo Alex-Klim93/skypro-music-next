@@ -56,7 +56,6 @@ export default function Signin() {
 
       try {
         const response = await authUser({ email, password });
-        console.log('Авторизация успешна:', response.data);
 
         // Сохраняем данные пользователя
         const userData = response.data;
@@ -78,7 +77,6 @@ export default function Signin() {
               refresh: userData.tokens.refresh,
             }),
           );
-          console.log('Токены сохранены');
         } else {
           console.warn('Токены не получены');
         }
@@ -88,8 +86,8 @@ export default function Signin() {
       } catch (error) {
         if (error instanceof AxiosError) {
           if (error.response) {
-            console.log('Ошибка авторизации:', error.response.data);
-            console.log('Статус:', error.response.status);
+            console.error('Ошибка авторизации:', error.response.data);
+            console.error('Статус:', error.response.status);
 
             if (error.response.status === 400) {
               setErrorMessage(
@@ -109,16 +107,16 @@ export default function Signin() {
               );
             }
           } else if (error.request) {
-            console.log('Нет ответа от сервера:', error.request);
+            console.error('Нет ответа от сервера:', error.request);
             setErrorMessage(
               'Отсутствует соединение с сервером. Попробуйте позже.',
             );
           } else {
-            console.log('Ошибка настройки:', error.message);
+            console.error('Ошибка настройки:', error.message);
             setErrorMessage('Неизвестная ошибка. Свяжитесь с поддержкой.');
           }
         } else {
-          console.log('Неожиданная ошибка:', error);
+          console.error('Неожиданная ошибка:', error);
           setErrorMessage('Неизвестная ошибка. Попробуйте еще раз.');
         }
       } finally {

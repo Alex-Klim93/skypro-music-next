@@ -121,7 +121,7 @@ export const logoutUser = async (refreshToken: string | null) => {
         },
       );
     } catch (error) {
-      console.log('Ошибка при выходе на сервере:', error);
+      console.error('Ошибка при выходе на сервере:', error);
     }
   }
 

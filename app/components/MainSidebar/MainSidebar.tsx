@@ -37,7 +37,7 @@ export default function MainSidebar() {
     try {
       await logoutUser(refreshToken);
     } catch (error) {
-      console.log('Ошибка при выходе:', error);
+      console.error('Ошибка при выходе:', error);
     }
 
     localStorage.removeItem('user');

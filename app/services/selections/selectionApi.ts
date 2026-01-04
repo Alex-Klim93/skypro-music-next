@@ -18,10 +18,10 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: unknown) => {
+    const originalRequest = (error as any).config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if ((error as any).response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
@@ -66,13 +66,12 @@ export type SelectionType = {
   _id: number;
   name: string;
   logo: string | null;
-  items: number[] | TrackType[]; // Может быть массив ID или объектов треков
-  tracks: any[];
+  items: number[] | TrackType[];
+  tracks: unknown[];
 };
 
 export const getAllSelections = (): Promise<SelectionType[]> => {
   return api.get('/catalog/selection/all').then((res) => {
-
     if (res.data && Array.isArray(res.data)) {
       return res.data;
     } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
@@ -90,12 +89,11 @@ export const getAllSelections = (): Promise<SelectionType[]> => {
 
 export const getSelectionById = (id: number): Promise<SelectionType> => {
   return api.get(`/catalog/selection/${id}/`).then((res) => {
-
-    // Проверяем структуру
     const selection = res.data?.data || res.data;
 
     if (selection) {
       if (Array.isArray(selection.items) && selection.items.length > 0) {
+        // Пустая проверка
       }
       return selection;
     }

@@ -71,15 +71,13 @@ export default function SignUp() {
         username, // Добавляем сгенерированный username
       });
 
-      console.log('Регистрация успешна:', response.data);
-
       // После успешной регистрации перенаправляем на страницу входа
       router.push('/Signin');
     } catch (error) {
       if (error instanceof AxiosError) {
         if (error.response) {
-          console.log('Ошибка регистрации:', error.response.data);
-          console.log('Статус:', error.response.status);
+          console.error('Ошибка регистрации:', error.response.data);
+          console.error('Статус:', error.response.status);
 
           if (error.response.status === 400) {
             setErrorMessage(
@@ -99,16 +97,16 @@ export default function SignUp() {
             );
           }
         } else if (error.request) {
-          console.log('Нет ответа от сервера:', error.request);
+          console.error('Нет ответа от сервера:', error.request);
           setErrorMessage(
             'Отсутствует соединение с сервером. Попробуйте позже.',
           );
         } else {
-          console.log('Ошибка настройки:', error.message);
+          console.error('Ошибка настройки:', error.message);
           setErrorMessage('Неизвестная ошибка. Свяжитесь с поддержкой.');
         }
       } else {
-        console.log('Неожиданная ошибка:', error);
+        console.error('Неожиданная ошибка:', error);
         setErrorMessage('Неизвестная ошибка. Попробуйте еще раз.');
       }
     } finally {

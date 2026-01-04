@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
-import { BASE_URL } from '@/app/constants';
+import { BASE_URL } from '@/app/services/constants';
+import { AppDispatch } from '@/app/store/store';
 
 export const refreshToken = async (refreshToken: string) => {
   const response = await axios.post(
@@ -17,7 +18,7 @@ export const refreshToken = async (refreshToken: string) => {
 export const withReauth = async <T>(
   apiFunction: (access: string) => Promise<T>,
   refreshToken: string,
-  dispatch: any,
+  dispatch: AppDispatch,
   setAccessToken: (token: string) => void,
 ): Promise<T> => {
   try {
