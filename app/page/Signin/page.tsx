@@ -5,11 +5,11 @@ import classNames from 'classnames';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChangeEvent, useState, useCallback, useMemo } from 'react';
-import { authUser } from '../services/auth/authApi';
+import { authUser } from '@/app/services/auth/authApi';
 import { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
-import { useAppDispatch } from '../store/store';
-import { setUser, setTokens } from '../services/auth/authSlice';
+import { useAppDispatch } from '@/app/store/store';
+import { setUser, setTokens } from '@/app/services/auth/authSlice';
 
 export default function Signin() {
   const [email, setEmail] = useState('');
@@ -19,26 +19,20 @@ export default function Signin() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  // Оптимизация с useCallback
   const onChangeEmail = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
+    setErrorMessage(''); // Сбрасываем ошибку при изменении поля
   }, []);
 
   const onChangePassword = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
+    setErrorMessage(''); // Сбрасываем ошибку при изменении поля
   }, []);
 
-  // Валидация email с useMemo
-  const isEmailValid = useMemo(() => {
-    return email.includes('@');
-  }, [email]);
-
-  // Валидация формы с useMemo
   const isFormValid = useMemo(() => {
-    return email.trim() !== '' && password.trim() !== '' && isEmailValid;
-  }, [email, password, isEmailValid]);
+    return email.trim() !== '' && password.trim() !== '';
+  }, [email, password]);
 
-  // Оптимизация с useCallback для сабмита
   const onSubmit = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
@@ -48,20 +42,13 @@ export default function Signin() {
         return setErrorMessage('Заполните все поля');
       }
 
-      if (!isEmailValid) {
-        return setErrorMessage('Введите корректный email');
-      }
-
       setIsLoading(true);
 
       try {
         const response = await authUser({ email, password });
-        console.log('Авторизация успешна:', response.data);
 
-        // Сохраняем данные пользователя
         const userData = response.data;
 
-        // Сохраняем пользователя в Redux и localStorage
         const userInfo = {
           email: userData.email,
           username: userData.username || email.split('@')[0],
@@ -70,7 +57,6 @@ export default function Signin() {
 
         dispatch(setUser(userInfo));
 
-        // Сохраняем токены в Redux и localStorage
         if (userData.tokens) {
           dispatch(
             setTokens({
@@ -78,57 +64,63 @@ export default function Signin() {
               refresh: userData.tokens.refresh,
             }),
           );
-          console.log('Токены сохранены');
         } else {
           console.warn('Токены не получены');
         }
 
-        // Перенаправляем на главную страницу
         router.push('/');
-      } catch (error) {
+      } catch (error: unknown) {
         if (error instanceof AxiosError) {
           if (error.response) {
-            console.log('Ошибка авторизации:', error.response.data);
-            console.log('Статус:', error.response.status);
+            // Получаем сообщение об ошибке с сервера
+            const serverError = error.response.data;
 
-            if (error.response.status === 400) {
-              setErrorMessage(
-                error.response.data.message ||
-                  'Некорректные данные для авторизации',
-              );
-            } else if (error.response.status === 401) {
-              setErrorMessage(
-                error.response.data.message ||
-                  'Пользователь с таким email или паролем не найден',
-              );
-            } else if (error.response.status === 500) {
-              setErrorMessage('Ошибка сервера. Попробуйте позже.');
+            // Если сервер вернул объект с сообщением
+            if (typeof serverError === 'object' && serverError !== null) {
+              if ('message' in serverError && serverError.message) {
+                setErrorMessage(String(serverError.message));
+              } else if ('detail' in serverError && serverError.detail) {
+                setErrorMessage(String(serverError.detail));
+              } else {
+                // Пробуем найти любое текстовое поле в ответе
+                const errorText = Object.values(serverError).find(
+                  (val) => typeof val === 'string',
+                );
+                setErrorMessage(
+                  errorText ? String(errorText) : 'Ошибка при авторизации',
+                );
+              }
+            } else if (typeof serverError === 'string') {
+              setErrorMessage(serverError);
             } else {
-              setErrorMessage(
-                error.response.data.message || 'Ошибка при авторизации',
-              );
+              // Стандартные сообщения по статусу
+              if (error.response.status === 400) {
+                setErrorMessage('Некорректные данные для авторизации');
+              } else if (error.response.status === 401) {
+                setErrorMessage('Неверный email или пароль');
+              } else if (error.response.status === 500) {
+                setErrorMessage('Ошибка сервера. Попробуйте позже.');
+              } else {
+                setErrorMessage('Ошибка при авторизации');
+              }
             }
           } else if (error.request) {
-            console.log('Нет ответа от сервера:', error.request);
             setErrorMessage(
               'Отсутствует соединение с сервером. Попробуйте позже.',
             );
           } else {
-            console.log('Ошибка настройки:', error.message);
             setErrorMessage('Неизвестная ошибка. Свяжитесь с поддержкой.');
           }
         } else {
-          console.log('Неожиданная ошибка:', error);
           setErrorMessage('Неизвестная ошибка. Попробуйте еще раз.');
         }
       } finally {
         setIsLoading(false);
       }
     },
-    [email, password, isEmailValid, router, dispatch],
+    [email, password, router, dispatch],
   );
 
-  // Оптимизация с useMemo для error message
   const errorContent = useMemo(() => {
     if (!errorMessage) return null;
 
@@ -139,7 +131,6 @@ export default function Signin() {
     );
   }, [errorMessage]);
 
-  // Оптимизация с useMemo для кнопки
   const buttonContent = useMemo(() => {
     return (
       <button
@@ -164,7 +155,7 @@ export default function Signin() {
                   alt="logo"
                   width={113}
                   height={17}
-                  priority // Оптимизация загрузки изображения
+                  priority
                 />
               </div>
             </Link>
@@ -177,6 +168,7 @@ export default function Signin() {
               onChange={onChangeEmail}
               disabled={isLoading}
               aria-label="Email"
+              autoComplete="email"
             />
             <input
               className={classNames(styles.modal__input)}
@@ -187,10 +179,11 @@ export default function Signin() {
               onChange={onChangePassword}
               disabled={isLoading}
               aria-label="Password"
+              autoComplete="current-password"
             />
             {errorContent}
             {buttonContent}
-            <Link href="/SignUp" className={styles.modal__btnSignup}>
+            <Link href="/page/SignUp" className={styles.modal__btnSignup}>
               Зарегистрироваться
             </Link>
           </form>

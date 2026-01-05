@@ -5,8 +5,10 @@ interface FilterProps {
   items: string[];
   isOpen: boolean;
   onClose: () => void;
-  filterType: string | null;
+  filterType: 'author' | 'year' | 'genre' | null;
   buttonRef: React.RefObject<HTMLButtonElement> | null;
+  selectedValues: string[];
+  onSelect: (value: string | null) => void;
 }
 
 export default function Filter({
@@ -15,12 +17,13 @@ export default function Filter({
   onClose,
   filterType,
   buttonRef,
+  selectedValues,
+  onSelect,
 }: FilterProps) {
   const filterContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Если клик был не по контенту фильтра и не по кнопке фильтра
       if (
         filterContentRef.current &&
         !filterContentRef.current.contains(event.target as Node) &&
@@ -42,13 +45,22 @@ export default function Filter({
 
   if (!isOpen || !buttonRef?.current) return null;
 
-  // Получаем позицию кнопки
   const buttonRect = buttonRef.current.getBoundingClientRect();
 
   const popupStyle = {
     position: 'fixed' as const,
-    top: buttonRect.bottom + window.scrollY + 5 + 'px', // 5px отступ от кнопки
+    top: buttonRect.bottom + window.scrollY + 5 + 'px',
     left: buttonRect.left + window.scrollX + 'px',
+  };
+
+  const handleAllClick = () => {
+    onSelect(null); // Сброс всех выбранных значений
+    onClose();
+  };
+
+  const handleItemClick = (item: string) => {
+    onSelect(item); // Передаем значение, обработка (добавить/удалить) в родителе
+    // Не закрываем попап, чтобы можно было выбрать несколько
   };
 
   return (
@@ -59,8 +71,21 @@ export default function Filter({
         style={popupStyle}
       >
         <div className={styles.filterList}>
+          {/* Пункт "Все" - подсвечивается если ничего не выбрано */}
+          <div
+            className={`${styles.filterItem} ${selectedValues.length === 0 ? styles.filterItemSelected : ''}`}
+            onClick={handleAllClick}
+          >
+            Все
+          </div>
+
+          {/* Остальные пункты - подсвечивается если элемент выбран */}
           {items.map((item, index) => (
-            <div key={index} className={styles.filterItem}>
+            <div
+              key={index}
+              className={`${styles.filterItem} ${selectedValues.includes(item) ? styles.filterItemSelected : ''}`}
+              onClick={() => handleItemClick(item)}
+            >
               {item}
             </div>
           ))}

@@ -153,6 +153,7 @@
 }
 
 .track__timeText {
+  width: 34px;
   font-style: normal;
   font-weight: 400;
   font-size: 16px;

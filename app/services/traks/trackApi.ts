@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { BASE_URL } from '../constants';
 import { TrackType } from '@/app/sharedTypes/sharedTypes';
+import { AppDispatch } from '@/app/store/store'; // Добавьте импорт типа AppDispatch
 
 // Базовые функции API без интерсепторов
 const baseApi = axios.create({
@@ -45,7 +46,7 @@ export const getFavoriteTracks = (
 export const addToFavoritesApi = (
   accessToken: string,
   id: number,
-): Promise<any> => {
+): Promise<unknown> => {
   return baseApi.post(
     `/catalog/track/${id}/favorite/`,
     {},
@@ -61,7 +62,7 @@ export const addToFavoritesApi = (
 export const removeFromFavoritesApi = (
   accessToken: string,
   id: number,
-): Promise<any> => {
+): Promise<unknown> => {
   return baseApi.delete(`/catalog/track/${id}/favorite/`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -87,7 +88,7 @@ export const refreshToken = async (refresh: string) => {
 export const withReauth = async <T>(
   apiFunction: (access: string) => Promise<T>,
   refreshTokenValue: string,
-  dispatch: any,
+  dispatch: AppDispatch,
   setAccessToken: (token: string) => void,
 ): Promise<T> => {
   try {
@@ -111,7 +112,7 @@ export const withReauth = async <T>(
         localStorage.removeItem('user');
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        window.location.href = '/Signin';
+        window.location.href = '/page/Signin';
         throw refreshError;
       }
     }
@@ -123,8 +124,8 @@ export const withReauth = async <T>(
 export const addToFavorites = async (
   id: number,
   refreshTokenValue: string,
-  dispatch: any,
-  setAccessToken: any,
+  dispatch: AppDispatch,
+  setAccessToken: (token: string) => void,
 ): Promise<void> => {
   return withReauth(
     (accessToken) => addToFavoritesApi(accessToken, id),
@@ -137,8 +138,8 @@ export const addToFavorites = async (
 export const removeFromFavorites = async (
   id: number,
   refreshTokenValue: string,
-  dispatch: any,
-  setAccessToken: any,
+  dispatch: AppDispatch,
+  setAccessToken: (token: string) => void,
 ): Promise<void> => {
   return withReauth(
     (accessToken) => removeFromFavoritesApi(accessToken, id),

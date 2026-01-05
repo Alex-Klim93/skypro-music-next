@@ -22,7 +22,13 @@ export default function Centerblock({
   tracks,
   title = 'Треки',
 }: CenterblockProps) {
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<
+    'author' | 'year' | 'genre' | null
+  >(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]); // Массив для нескольких авторов
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]); // Массив для нескольких жанров
+  const [selectedYears, setSelectedYears] = useState<string[]>([]); // Массив для нескольких годов
 
   // Refs для кнопок фильтров
   const authorButtonRef = useRef<HTMLButtonElement>(null);
@@ -33,12 +39,85 @@ export default function Centerblock({
   const uniqueGenres = getUniqueGenreValues(tracks);
   const uniqueYears = getUniqueYears(tracks);
 
-  const handleFilterClick = (filterName: string) => {
+  // Функция фильтрации треков
+  const getFilteredTracks = () => {
+    return tracks.filter((track) => {
+      // Поиск
+      const matchesSearch =
+        !searchQuery ||
+        track.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        track.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        track.album.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Фильтр по автору (проверяем все выбранные авторы)
+      const matchesAuthor =
+        selectedAuthors.length === 0 || selectedAuthors.includes(track.author);
+
+      // Фильтр по жанру (проверяем все выбранные жанры)
+      const matchesGenre =
+        selectedGenres.length === 0 ||
+        (Array.isArray(track.genre) &&
+          track.genre.some((genre) => selectedGenres.includes(genre)));
+
+      // Фильтр по году
+      const matchesYear =
+        selectedYears.length === 0 ||
+        (track.release_date &&
+          selectedYears.some((year) => track.release_date.startsWith(year)));
+
+      return matchesSearch && matchesAuthor && matchesGenre && matchesYear;
+    });
+  };
+
+  const filteredTracks = getFilteredTracks();
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleFilterClick = (filterName: 'author' | 'year' | 'genre') => {
     setActiveFilter(activeFilter === filterName ? null : filterName);
   };
 
   const handleCloseFilter = () => {
     setActiveFilter(null);
+  };
+
+  const handleFilterSelect = (value: string | null) => {
+    if (!activeFilter) return;
+
+    if (value === null) {
+      // Сброс всех выбранных значений для этого фильтра
+      if (activeFilter === 'author') {
+        setSelectedAuthors([]);
+      } else if (activeFilter === 'genre') {
+        setSelectedGenres([]);
+      } else if (activeFilter === 'year') {
+        setSelectedYears([]);
+      }
+    } else {
+      // Добавление/удаление значения из массива
+      if (activeFilter === 'author') {
+        setSelectedAuthors(
+          (prev) =>
+            prev.includes(value)
+              ? prev.filter((item) => item !== value) // Удаляем если уже есть
+              : [...prev, value], // Добавляем если нет
+        );
+      } else if (activeFilter === 'genre') {
+        setSelectedGenres((prev) =>
+          prev.includes(value)
+            ? prev.filter((item) => item !== value)
+            : [...prev, value],
+        );
+      } else if (activeFilter === 'year') {
+        setSelectedYears((prev) =>
+          prev.includes(value)
+            ? prev.filter((item) => item !== value)
+            : [...prev, value],
+        );
+      }
+    }
   };
 
   const getFilterItems = () => {
@@ -67,9 +146,27 @@ export default function Centerblock({
     }
   };
 
+  const getSelectedValues = () => {
+    switch (activeFilter) {
+      case 'author':
+        return selectedAuthors;
+      case 'genre':
+        return selectedGenres;
+      case 'year':
+        return selectedYears;
+      default:
+        return [];
+    }
+  };
+
+  // Получаем количество выбранных значений для каждого фильтра
+  const authorCount = selectedAuthors.length;
+  const genreCount = selectedGenres.length;
+  const yearCount = selectedYears.length;
+
   return (
     <div className={styles.centerblock}>
-      <Search />
+      <Search onSearch={handleSearch} />
       <h2 className={styles.centerblock__h2}>{title}</h2>
 
       <div className={styles.centerblock__filter}>
@@ -83,6 +180,9 @@ export default function Centerblock({
           onClick={() => handleFilterClick('author')}
         >
           исполнителю
+          {authorCount > 0 && (
+            <span className={styles.filterBadge}>{authorCount}</span>
+          )}
         </button>
 
         <button
@@ -93,6 +193,9 @@ export default function Centerblock({
           onClick={() => handleFilterClick('year')}
         >
           году выпуска
+          {yearCount > 0 && (
+            <span className={styles.filterBadge}>{yearCount}</span>
+          )}
         </button>
 
         <button
@@ -103,6 +206,9 @@ export default function Centerblock({
           onClick={() => handleFilterClick('genre')}
         >
           жанру
+          {genreCount > 0 && (
+            <span className={styles.filterBadge}>{genreCount}</span>
+          )}
         </button>
 
         <Filter
@@ -111,6 +217,8 @@ export default function Centerblock({
           onClose={handleCloseFilter}
           filterType={activeFilter}
           buttonRef={getButtonRef()}
+          selectedValues={getSelectedValues()}
+          onSelect={handleFilterSelect}
         />
       </div>
 
@@ -132,18 +240,18 @@ export default function Centerblock({
           </div>
         </div>
         <div className={styles.content__playlist}>
-          {tracks.length > 0 ? (
-            tracks.map((track, index) => (
+          {filteredTracks.length > 0 ? (
+            filteredTracks.map((track, index) => (
               <Track
                 key={track._id}
                 track={track}
-                playlist={tracks}
+                playlist={filteredTracks}
                 index={index}
               />
             ))
           ) : (
             <div className={styles.emptyTracks}>
-              <p>В этой подборке пока нет треков</p>
+              <p>По вашему запросу ничего не найдено</p>
             </div>
           )}
         </div>

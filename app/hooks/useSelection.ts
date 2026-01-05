@@ -5,6 +5,11 @@ import {
 } from '../services/selections/selectionApi';
 import { TrackType } from '../sharedTypes/sharedTypes';
 
+// Интерфейс для типизации ошибок
+interface ApiError extends Error {
+  message: string;
+}
+
 export const useSelection = (id: number) => {
   const [selection, setSelection] = useState<SelectionType | null>(null);
   const [tracks, setTracks] = useState<TrackType[]>([]);
@@ -28,8 +33,9 @@ export const useSelection = (id: number) => {
       } else {
         setTracks([]);
       }
-    } catch (err: any) {
-      setError(err.message || 'Ошибка загрузки подборки');
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      setError(error.message || 'Ошибка загрузки подборки');
     } finally {
       setLoading(false);
     }
