@@ -112,7 +112,7 @@ export const withReauth = async <T>(
         localStorage.removeItem('user');
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        window.location.href = '/Signin';
+        window.location.href = '/page/Signin';
         throw refreshError;
       }
     }

@@ -5,8 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAppSelector, useAppDispatch } from '../../store/store';
-import { logout } from '../../services/auth/authSlice';
+import { useAppSelector, useAppDispatch } from '@/app/store/store';
+import { logout } from '@/app/services/auth/authSlice';
 
 export default function MainNav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -103,8 +103,8 @@ export default function MainNav() {
             <>
               <li className={styles.menu__item}>
                 <Link
-                  href="/MyTracks"
-                  className={`${styles.menu__link} ${pathname === '/MyTracks' ? styles.active : ''}`}
+                  href="/page/MyTracks"
+                  className={`${styles.menu__link} ${pathname === '/page/MyTracks' ? styles.active : ''}`}
                   onClick={closeMenu}
                 >
                   Мой плейлист
@@ -123,8 +123,8 @@ export default function MainNav() {
           ) : (
             <li className={styles.menu__item}>
               <Link
-                href="/Signin"
-                className={`${styles.menu__link} ${pathname === '/Signin' ? styles.active : ''}`}
+                href="/page/Signin"
+                className={`${styles.menu__link} ${pathname === '/page/Signin' ? styles.active : ''}`}
                 onClick={closeMenu}
               >
                 Войти

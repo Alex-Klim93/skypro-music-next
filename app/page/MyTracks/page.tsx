@@ -44,7 +44,7 @@ export default function MyTracksPage() {
       const storedRefreshToken = localStorage.getItem('refresh_token');
 
       if (!storedUser || !storedAccessToken || !storedRefreshToken) {
-        router.push('/Signin');
+        router.push('/page/Signin');
         return;
       }
 
@@ -57,7 +57,7 @@ export default function MyTracksPage() {
       await loadMyTracks();
     } catch (error) {
       console.error('Ошибка проверки авторизации:', error);
-      router.push('/Signin');
+      router.push('/page/Signin');
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ export default function MyTracksPage() {
       localStorage.removeItem('user');
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      router.push('/Signin');
+      router.push('/page/Signin');
     } finally {
       setLoading(false);
     }

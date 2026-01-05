@@ -35,7 +35,7 @@ describe('Search Component', () => {
   });
 
   test('обновляет значение при вводе текста', () => {
-    render(<Search />);
+    render(<Search      />);
 
     const searchInput = screen.getByPlaceholderText('Поиск') as HTMLInputElement;
 

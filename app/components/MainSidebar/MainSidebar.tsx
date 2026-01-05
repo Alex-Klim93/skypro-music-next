@@ -62,7 +62,7 @@ export default function MainSidebar() {
         )}
         <Link
           className={styles.sidebar__icon}
-          href={user ? '#' : '/Signin'}
+          href={user ? '#' : '/page/Signin'}
           onClick={user ? handleLogout : undefined}
         >
           <svg>
